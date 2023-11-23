@@ -22,15 +22,15 @@ class NLToLTL:
         - str: The corresponding LTL specification.
         """
 
-        stuff = []
+        messages = []
 
-        stuff.append(init_messages)
+        messages.append(init_messages)
                 
-        stuff.append(user_input)
+        messages.append(user_input)
 
         completion = self.client.chat.completions.create(
         model=model,
-        messages=stuff,
+        messages=messages,
         )     
 
         return completion.choices[0].message.content
