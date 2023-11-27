@@ -11,9 +11,10 @@ def get_target_position_from_chatgpt():
 
     # Initial messages for ChatGPT
     init_messages = [{"role": "system", "content": "You are an assistant guiding a drone. Your goal is to provide the target position to the drone."}, 
-                    {"role": "system", "content": "Please only respond with the target position as a tuple (x, y, z)."},
-                    {"role": "system", "content": "Example: (1.5, 1.5, 1.5)"},
-                    {"role": "system", "content": "The starting position is (0, 0, 0)."},
+                     {"role": "system", "content": "Positions are represented by a tuple <x, y, z>."},
+                     {"role": "system", "content": "The starting position is <0, 0, 0>."},
+                     {"role": "system", "content": "Only respond with the target position as a tuple <x, y, z>. No other text should be returned."},
+                     {"role": "system", "content": "Example: User: Move up by 1 in the x-direction. Response: <1.0, 0.0, 0.0>"},
                     ]
 
     # User input to get target position
@@ -25,9 +26,9 @@ def get_target_position_from_chatgpt():
     print(target)
 
     # Extract target position from LTL (Assuming format: "Move the drone to position (x, y, z).")
-    target_position_str = target.split("(")[1].split(")")[0]
+    target_position_str = target.split("<")[1].split(">")[0]
     target_position = np.array([float(coord) for coord in target_position_str.split(",")])
-    print(f"Target position: {target_position}")
+    print(f"Target position, extracted: {target_position}")
 
     return target_position
 
