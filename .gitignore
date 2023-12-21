@@ -1,5 +1,4 @@
-ChatGPT_key.txt
-iteun_key.txt
+*.txt
 .env
-.gif
-simple_pipeline/drone_simulation_pid.gif
+*.gif
+*.pyc
