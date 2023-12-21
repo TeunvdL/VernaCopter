@@ -11,7 +11,7 @@ def get_target_position_from_chatgpt():
 
     # Initial messages for ChatGPT
     init_messages = [{"role": "system", "content": "You are an assistant guiding a drone. Your goal is to provide the target position to the drone."}, 
-                     {"role": "system", "content": "Positions are represented by a tuple <x, y, z>."},
+                     {"role": "system", "content": "Positions are represented as a tuple <x, y, z>."},
                      {"role": "system", "content": "The starting position is <0, 0, 0>."},
                      {"role": "system", "content": "Only respond with the target position as a tuple <x, y, z>. No other text should be returned."},
                      {"role": "system", "content": "Example: User: Move up by 1 in the x-direction. Response: <1.0, 0.0, 0.0>"},
