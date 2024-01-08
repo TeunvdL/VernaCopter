@@ -7,7 +7,7 @@ class Drone:
         self.col = col
         self.position = start_position
         self.velocity = start_velocity
-        self.heading_direction = self.velocity/np.linalg.norm(self.velocity)
+        self.heading_direction = self.velocity/np.linalg.norm(self.velocity+np.ones(3)*1e-6)
 
     def rotate_z(self, vector, theta):
         rotation_matrix = np.array([[np.cos(theta), -np.sin(theta), 0.0],
@@ -15,7 +15,9 @@ class Drone:
                                     [0.0, 0.0, 1.0]])
         return np.matmul(rotation_matrix, vector)
 
-    def get_rotor_positions(self):
+    def get_rotor_positions(self, position, velocity):
+        self.position = position
+        self.velocity = velocity
         theta = np.arctan2(self.velocity[1], self.velocity[0])
         front_left_vector = np.array([0.5*self.size, 0.5*self.size, 0.0])
         front_right_vector = np.array([0.5*self.size, -0.5*self.size, 0.0])
@@ -32,6 +34,12 @@ class Drone:
         back_left_position = self.position + back_left_vector_rotated
         back_right_position = self.position + back_right_vector_rotated
     
-        rotorpositions = np.array([front_left_position, front_right_position, back_right_position, back_left_position])
+        rotor_positions = np.array([front_left_position, front_right_position, back_right_position, back_left_position])
 
-        return rotorpositions
+        return rotor_positions
+    
+    def get_heading_direction(self, position, velocity):
+        self.position = position
+        self.velocity = velocity
+        self.heading_direction = self.velocity/np.linalg.norm(self.velocity+np.ones(3)*1e-6)
+        return self.heading_direction
