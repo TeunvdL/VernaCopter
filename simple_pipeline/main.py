@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, PillowWriter 
 from ChatGPT_move_to import ChatGPT_move_to
 from simple_simulation import DroneSimulator
+from drone import Drone
+import mpl_toolkits.mplot3d.art3d as art3d
+from matplotlib.patches import Circle
 
 def get_target_position_from_chatgpt():
     # Initialize ChatGPT interaction
@@ -14,16 +17,18 @@ def get_target_position_from_chatgpt():
                      {"role": "system", "content": "Positions are represented as a tuple <x, y, z>."},
                      {"role": "system", "content": "The starting position is <0, 0, 0>."},
                      {"role": "system", "content": "Only respond with the target position as a tuple <x, y, z>. No other text should be returned."},
+                     {"role": "system", "content": "Only use floating point numbers for the position. Do not use any mathematical operators like \"sqrt()\", \"sin()\", etc."},
                      {"role": "system", "content": "Example: User: Move up by 1 in the x-direction. Response: <1.0, 0.0, 0.0>"},
+                     {"role": "system", "content": "Example: User: Move to the coordinates (5, 4, 3). Response: <5.0, 4.0, 3.0>"},
                     ]
 
     # User input to get target position
-    user_input = [{"role": "user", "content": "Move the drone diagonally in the +x, +z-direction. The total displacement of the drone should be 5 units."},
+    user_input = [{"role": "user", "content": "Move the drone to position (5, 5, 5)."},
                   ]
 
     # Generate target position from user input using ChatGPT
     target = chatgpt.chatcompletion(init_messages, user_input)
-    print(target)
+    print(f"ChatGPT says: \"{target}\"")
 
     # Extract target position from LTL (Assuming format: "Move the drone to position (x, y, z).")
     target_position_str = target.split("<")[1].split(">")[0]
@@ -37,8 +42,8 @@ def main():
     dt = 0.05  # time step
     max_velocity = 5.0
     kp = 1.0
+    kd = 0.75
     ki = 0.0
-    kd = 0.5
 
     # Get target position from ChatGPT
     target_position = get_target_position_from_chatgpt()
@@ -46,57 +51,59 @@ def main():
     # Create DroneSimulator instance
     drone_simulator = DroneSimulator(duration, dt, max_velocity, kp, ki, kd)
 
-    # Simulation
-    x_traj, y_traj, z_traj, distances_to_target = drone_simulator.simulate_drone_with_pid_controller(target_position)
+    # Simulation with animation
+    positions, distances_to_target, velocities = drone_simulator.simulate_drone(target_position, 
+                                                                                start_position=np.array([0., 0., 0.]), 
+                                                                                start_velocity=np.array([-5., -5., 0.]))
+    
+    # Animation of the drone 
+    drone = Drone(positions[0], velocities[0], col="blue")
 
-    # Plotting the 3D trajectory
+    # Plotting the 3D trajectory with animation
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111, projection='3d')
-    target, = ax1.plot([target_position[0]], [target_position[1]], [target_position[2]], 'go', label='Target Position')
-
-    # Initialize markers and lines for the drone representation
-    marker, = ax1.plot([], [], [], 'ro', label='Drone Marker')
-    heading_line, = ax1.plot([], [], [], 'r-', label='Heading Direction')
-
     ax1.set_xlabel('X-axis')
     ax1.set_ylabel('Y-axis')
     ax1.set_zlabel('Z-axis')
-    ax1.legend()
+
+    min_coord = np.min(positions)
+    max_coord = np.max(positions)
 
     def update(frame):
-        # Update marker representing the current position of the drone
-        marker.set_data([x_traj[frame]], [y_traj[frame]])
-        marker.set_3d_properties(z_traj[frame])
+        ax1.cla()  # Clear the previous frame
 
-        # Update heading direction based on the velocity
-        if frame < len(x_traj) - 1:
-            delta_position = np.array([x_traj[frame + 1] - x_traj[frame], 
-                                    y_traj[frame + 1] - y_traj[frame], 
-                                    z_traj[frame + 1] - z_traj[frame]])
-            heading_direction = delta_position / np.linalg.norm(delta_position)
-        else:
-            heading_direction = np.array([1.0, 0.0, 0.0])  # Default direction if at the last frame
+        # Adjust plot limits
+        ax1.set_xlim(min_coord, max_coord)
+        ax1.set_ylim(min_coord, max_coord)
+        ax1.set_zlim(min_coord, max_coord)
 
-        # Scale the heading direction for visualization
-        heading_length = 0.3
-        heading_vector = heading_length * heading_direction
+        rotor_positions = drone.get_rotor_positions(positions[frame], velocities[frame])
+        heading_direction = drone.get_heading_direction(positions[frame], velocities[frame])
+        
+        # Add drone body
+        for rotor_position in [rotor_positions[0], rotor_positions[1], rotor_positions[2], rotor_positions[3]]:
+            p = Circle((rotor_position[0], rotor_position[1]), drone.rotor_radius, facecolor=drone.col, edgecolor='black')
+            ax1.add_patch(p)
+            art3d.pathpatch_2d_to_3d(p, z=rotor_position[2], zdir="z")
 
-        # Update line representing the heading direction
-        heading_line.set_data([x_traj[frame], x_traj[frame] + heading_vector[0]],
-                            [y_traj[frame], y_traj[frame] + heading_vector[1]])
-        heading_line.set_3d_properties([z_traj[frame], z_traj[frame] + heading_vector[2]])
+        # Add vector for heading direction
+        ax1.quiver(positions[frame,0], positions[frame,1], positions[frame,2], 
+                heading_direction[0], heading_direction[1], heading_direction[2], 
+                length=drone.size, normalize=True)
+        
+        # Add target position
+        ax1.scatter(target_position[0], target_position[1], target_position[2], c='green', marker='o', s=50, alpha=0.5)
 
-        # Adjust plot limits dynamically
-        ax1.set_xlim([min(x_traj), max(x_traj)])
-        ax1.set_ylim([min(y_traj), max(y_traj)])
-        ax1.set_zlim([min(z_traj), max(z_traj)])
+        # Trace trajectory
+        ax1.plot(positions[:frame,0], positions[:frame,1], positions[:frame,2], c='red', linewidth=0.5)
 
     # Animation
-    frames = len(x_traj)
+    frames = len(positions[:,0])
     ani = FuncAnimation(fig1, update, frames=frames, interval=dt * 1000, blit=False)
 
     # Save animation as a GIF
-    ani.save('drone_simulation_pid.gif', writer='imagemagick', fps=1/dt)
+    ani.save('drone_simulation_animation.gif', writer='imagemagick', fps=1/dt)
+
 
     # Plotting the distance plot
     fig2, ax2 = plt.subplots()
