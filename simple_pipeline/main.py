@@ -30,7 +30,7 @@ def get_target_position_from_chatgpt():
     target = chatgpt.chatcompletion(init_messages, user_input)
     print(f"ChatGPT says: \"{target}\"")
 
-    # Extract target position from LTL (Assuming format: "Move the drone to position (x, y, z).")
+    # Extract target position from LTL (Assuming format: "Move the drone to position <x, y, z>.")
     target_position_str = target.split("<")[1].split(">")[0]
     target_position = np.array([float(coord) for coord in target_position_str.split(",")])
     print(f"Target position, extracted: {target_position}")
