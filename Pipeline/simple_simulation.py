@@ -27,12 +27,19 @@ class DroneSimulator:
     def update_position(self, position, velocity):
         return position + velocity * self.dt
 
-    def simulate_drone_with_pid_controller(self, target_position):
-        position = np.array([0., 0., 0.])
-        velocity = np.array([0., 0., 0.])
+    def simulate_drone(self, 
+                       target_position, 
+                       start_position = np.array([0., 0., 0.]), 
+                       start_velocity = np.array([0., 0., 0.]),):
+        
+        position = start_position
+        velocity = start_velocity
+
         num_steps = int(self.duration / self.dt)
 
-        x_traj, y_traj, z_traj = [position[0]], [position[1]], [position[2]]
+        positions = position
+        velocities = velocity
+
         distances_to_target = [np.linalg.norm(position - target_position)]
 
         # PID Controller for each axis
@@ -65,8 +72,7 @@ class DroneSimulator:
             # Store distances
             distances_to_target.append(distance_to_target)
 
-            x_traj.append(position[0])
-            y_traj.append(position[1])
-            z_traj.append(position[2])
+            positions = np.vstack((positions, position))
+            velocities = np.vstack((velocities, velocity))
 
-        return x_traj, y_traj, z_traj, distances_to_target
+        return positions, distances_to_target, velocities
