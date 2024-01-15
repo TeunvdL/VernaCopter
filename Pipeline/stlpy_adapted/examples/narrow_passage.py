@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from stlpy.benchmarks import NarrowPassage
-from stlpy.solvers import *
+from stlpy_adapted.benchmarks import NarrowPassage
+from stlpy_adapted.solvers import GurobiMICPSolver
 
 # Specification Parameters
 T = 25
@@ -18,7 +18,7 @@ Q = 1e-1*np.diag([0,0,1,1])   # just penalize high velocities
 R = 1e-1*np.eye(2)
 
 # Initial state
-x0 = np.array([3.0,3.6,0,0])
+x0 = np.array([3.0,3.6,0,0,0,0])
 
 # Specify a solution method
 solver = GurobiMICPSolver(spec, sys, x0, T, robustness_cost=True)
