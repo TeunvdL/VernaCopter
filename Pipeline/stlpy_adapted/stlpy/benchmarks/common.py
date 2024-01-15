@@ -137,6 +137,133 @@ def outside_rectangle_formula(bounds, y1_index, y2_index, d, name=None):
 
     return outside_rectangle
 
+
+def inside_cuboid_formula(bounds, y1_index, y2_index, y3_index, d, name=None):
+    """
+    Create an STL formula representing being inside a
+    cuboid with the given bounds:
+
+    ::
+                   +-------------------+ y3_max
+                  / |                 /|
+                 /  |                / |
+                +-------------------+  |
+         y2_max |   +               |  + y3_min
+                |  /                | /
+                | /                 |/
+      y2_min    +-------------------+
+                y1_min              y1_max
+
+    :param bounds:      Tuple ``(y1_min, y1_max, y2_min, y2_max, y3_min, y3_max)`` 
+                        containing the bounds of the rectangle. 
+    :param y1_index:    index of the first (``y1``) dimension
+    :param y2_index:    index of the second (``y2``) dimension
+    :param y3_index:    index of the second (``y3``) dimension
+    :param d:           dimension of the overall signal
+    :param name:        (optional) string describing this formula
+
+    :return inside_rectangle:   An ``STLFormula`` specifying being inside the
+                                rectangle at time zero.
+    """
+    assert y1_index < d , "index must be less than signal dimension"
+    assert y2_index < d , "index must be less than signal dimension"
+    assert y3_index < d , "index must be less than signal dimension"
+
+    # Unpack the bounds
+    y1_min, y1_max, y2_min, y2_max, y3_min, y3_max = bounds
+
+    # Create predicates a*y >= b for each side of the rectangle
+    a1 = np.zeros((1,d)); a1[:,y1_index] = 1
+    right = LinearPredicate(a1, y1_min)
+    left = LinearPredicate(-a1, -y1_max)
+
+    a2 = np.zeros((1,d)); a2[:,y2_index] = 1
+    top = LinearPredicate(a2, y2_min)
+    bottom = LinearPredicate(-a2, -y2_max)
+
+    a3 = np.zeros((1,d)); a2[:,y3_index] = 1
+    front = LinearPredicate(a3, y3_min)
+    back = LinearPredicate(-a3, -y3_max)
+
+    # Take the conjuction across all the sides
+    inside_cuboid = right & left & top & bottom & front & back
+
+    # set the names
+    if name is not None:
+        right.name = "right of " + name
+        left.name = "left of " + name
+        top.name = "top of " + name
+        bottom.name = "bottom of " + name
+        front.name = "front of " + name
+        back.name = "back of " + name
+        inside_cuboid.name = name
+
+    return inside_cuboid
+
+
+def outside_cuboid_formula(bounds, y1_index, y2_index, y3_index, d, name=None):
+    """
+    Create an STL formula representing being outside a
+    cuboid with the given bounds:
+
+    ::
+                   +-------------------+ y3_max
+                  / |                 /|
+                 /  |                / |
+                +-------------------+  |
+         y2_max |   +               |  + y3_min
+                |  /                | /
+                | /                 |/
+      y2_min    +-------------------+
+                y1_min              y1_max
+
+    :param bounds:      Tuple ``(y1_min, y1_max, y2_min, y2_max, y3_min, y3_max)`` 
+                        containing the bounds of the rectangle. 
+    :param y1_index:    index of the first (``y1``) dimension
+    :param y2_index:    index of the second (``y2``) dimension
+    :param y3_index:    index of the second (``y3``) dimension
+    :param d:           dimension of the overall signal
+    :param name:        (optional) string describing this formula
+    
+    :return outside_rectangle:   An ``STLFormula`` specifying being outside the
+                                 cuboid at time zero.
+    """
+    assert y1_index < d , "index must be less than signal dimension"
+    assert y2_index < d , "index must be less than signal dimension"
+    assert y3_index < d , "index must be less than signal dimension"
+
+    # Unpack the bounds
+    y1_min, y1_max, y2_min, y2_max, y3_min, y3_max = bounds
+
+    # Create predicates a*y >= b for each side of the rectangle
+    a1 = np.zeros((1,d)); a1[:,y1_index] = 1
+    right = LinearPredicate(a1, y1_max)
+    left = LinearPredicate(-a1, -y1_min)
+
+    a2 = np.zeros((1,d)); a2[:,y2_index] = 1
+    top = LinearPredicate(a2, y2_max)
+    bottom = LinearPredicate(-a2, -y2_min)
+
+    a3 = np.zeros((1,d)); a3[:,y3_index] = 1
+    front = LinearPredicate(a3, y3_max)
+    back = LinearPredicate(-a3, -y3_min)
+
+    # Take the disjuction across all the sides
+    outside_cuboid = right | left | top | bottom | front | back
+
+    # set the names
+    if name is not None:
+        right.name = "right of " + name
+        left.name = "left of " + name
+        top.name = "top of " + name
+        bottom.name = "bottom of " + name
+        front.name = "front of " + name
+        back.name = "back of " + name
+        outside_cuboid.name = name
+
+    return outside_cuboid
+
+
 def make_rectangle_patch(xmin, xmax, ymin, ymax, **kwargs):
     """
     Convienience function for making a ``matplotlib.patches.Rectangle`` 
