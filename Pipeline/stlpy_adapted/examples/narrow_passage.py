@@ -1,3 +1,8 @@
+import sys
+import os
+current_dir = os.path.dirname(__file__)
+stlpy_adapted_dir = os.path.join(current_dir, '..')
+sys.path.append(stlpy_adapted_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 from stlpy_adapted.benchmarks import NarrowPassage
