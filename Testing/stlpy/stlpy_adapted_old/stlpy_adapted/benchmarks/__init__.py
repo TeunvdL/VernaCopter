@@ -1,0 +1,1 @@
+from .narrow_passage import NarrowPassage
