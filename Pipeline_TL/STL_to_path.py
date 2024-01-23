@@ -5,20 +5,75 @@ from stlpy.STL import LinearPredicate
 from stlpy.solvers import GurobiMICPSolver
 
 class drone_dynamics:
+    """
+    A class representing the dynamics of a drone.
+
+    Parameters:
+    - mass (float): Mass of the drone. Default is 20.
+    - max_thrust (float): Absolute maximum thrust of the drone. Default is 200.
+
+    Attributes:
+    - m (float): Mass of the drone.
+    - max_thrust (float): Absolute maximum thrust.
+    - u_min (numpy.ndarray): Minimum thrust values for each axis.
+    - u_max (numpy.ndarray): Maximum thrust values for each axis.
+    - A (numpy.ndarray): State space matrix A for the drone dynamics.
+    - B (numpy.ndarray): State space matrix B for the drone dynamics.
+    - C (numpy.ndarray): Output matrix C for the drone dynamics.
+    - D (numpy.ndarray): Feedforward matrix D for the drone dynamics.
+
+    State space model
+
+    x_dot = Ax + Bu
+        y = Cx + Du
+
+    x = [u, v, w, x, y, z]
+    u = [Fx, Fy, Fz]
+
+    A =    [[0., 0., 0., 0., 0., 0.],  B = 1/m [[1., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],           [0., 1., 0.],
+            [0., 0., 0., 0., 0., 0.],           [0., 0., 1.],
+            [1., 0., 0., 0., 0., 0.],           [0., 0., 0.],
+            [0., 1., 0., 0., 0., 0.],           [0., 0., 0.],
+            [0., 0., 1., 0., 0., 0.]]           [0., 0., 0.]]
+
+    C =    [[1., 0., 0., 0., 0., 0.],      D = [[0., 0., 0.],
+            [0., 1., 0., 0., 0., 0.],           [0., 0., 0.],
+            [0., 0., 1., 0., 0., 0.],           [0., 0., 0.],
+            [0., 0., 0., 1., 0., 0.],           [0., 0., 0.],
+            [0., 0., 0., 0., 1., 0.],           [0., 0., 0.],
+            [0., 0., 0., 0., 0., 1.]]           [0., 0., 0.]]
+    """
+
     def __init__(self, mass=20, max_thrust=200):
         self.m = mass # mass of the drone
         self.max_thrust = max_thrust # absolute maximum thrust
         self.u_min = -self.max_thrust*np.ones(3,) # minimum thrust
         self.u_max = self.max_thrust*np.ones(3,) # maximum thrust
 
-        # State space model
+        """
+        State space model
 
-        # x_dot = Ax + Bu
-        #     y = Cx + Du
+        x_dot = Ax + Bu
+            y = Cx + Du
 
-        # x = [u, v, w, x, y, z]
-        # u = [Fx, Fy, Fz]
+        x = [u, v, w, x, y, z]
+        u = [Fx, Fy, Fz]
 
+        A =    [[0., 0., 0., 0., 0., 0.],   B = 1/m [[1., 0., 0.],
+                [0., 0., 0., 0., 0., 0.],            [0., 1., 0.],
+                [0., 0., 0., 0., 0., 0.],            [0., 0., 1.],
+                [1., 0., 0., 0., 0., 0.],            [0., 0., 0.],
+                [0., 1., 0., 0., 0., 0.],            [0., 0., 0.],
+                [0., 0., 1., 0., 0., 0.]]            [0., 0., 0.]]
+
+        C =     [[1., 0., 0., 0., 0., 0.]       D = [[0., 0., 0.],
+                 [0., 1., 0., 0., 0., 0.]            [0., 0., 0.],
+                 [0., 0., 1., 0., 0., 0.]            [0., 0., 0.],
+                 [0., 0., 0., 1., 0., 0.]            [0., 0., 0.],
+                 [0., 0., 0., 0., 1., 0.]            [0., 0., 0.],
+                 [0., 0., 0., 0., 0., 1.]]           [0., 0., 0.]]           
+        """
         self.A = np.zeros((6,6))
         self.A[3,0] = 1
         self.A[4,1] = 1
