@@ -3,7 +3,6 @@ from GPT import *
 from NL_to_STL import *
 from visualization import *
 
-solver = STLSolver()
 T = 10
 
 
@@ -17,7 +16,8 @@ user_input = [{"role": "user", "content": "Go to goal 1, 2 and 3. Always avoid o
 translator = NL_to_STL()
 spec = translator.extract_STL_formula(user_input, objects, T)
 
-x,u = solver.generate_trajectory(spec)
+solver = STLSolver(spec)
+x,u = solver.generate_trajectory()
 
 print("x: ", x)
 

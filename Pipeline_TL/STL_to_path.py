@@ -186,32 +186,19 @@ class STL_formulas:
     
 
 class STLSolver:
-    def __init__(self, x0 = np.zeros(6,)):
+    def __init__(self, spec, x0 = np.zeros(6,), T=10):
         self.x0 = x0
+        self.spec = spec
 
-    def get_specification(self, T=10):
-        goal1_bounds = (4, 5, 4, 5, 4, 5)
-        goal2_bounds = (-5, -4, -5, -4, -5, -4)
-        goal3_bounds = (-6,-5,-5,-4,-5,-4)
-        obstacle_bounds = (-1.5, -0.5, -1.5, -0.5, -1.5, -0.5)
 
-        pi1 = STL_formulas.inside_cuboid(goal1_bounds)
-        pi2 = STL_formulas.inside_cuboid(goal2_bounds)
-        pi3 = STL_formulas.inside_cuboid(goal3_bounds)
-        pi4 = STL_formulas.outside_cuboid(obstacle_bounds)
-        spec = pi1.eventually(0, T) & pi2.eventually(0, T)& pi3.eventually(0,T) & pi4.always(0, T)
-        
-        return spec
-
-    def generate_trajectory(self, spec, T=10):
+    def generate_trajectory(self, T=10):
         dynamics = drone_dynamics()
         sys = dynamics.getSystem()
-        spec = STLSolver.get_specification(self)
 
         Q = np.zeros((6,6))
         R = np.eye(3)
 
-        solver = GurobiMICPSolver(spec, sys, self.x0, T, verbose=False)
+        solver = GurobiMICPSolver(self.spec, sys, self.x0, T, verbose=False)
         solver.AddQuadraticCost(Q=Q, R=R)
         solver.AddControlBounds(dynamics.u_min, dynamics.u_max)
         x, u, _, _ = solver.Solve()
