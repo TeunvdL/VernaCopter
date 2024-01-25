@@ -9,14 +9,12 @@ class drone_dynamics:
     A class representing the dynamics of a drone.
 
     Parameters:
-    - mass (float): Mass of the drone. Default is 20.
-    - max_thrust (float): Absolute maximum thrust of the drone. Default is 200.
+    - max_acc (float): Absolute maximum acceleration of the drone. Default is 10.
 
     Attributes:
-    - m (float): Mass of the drone.
-    - max_thrust (float): Absolute maximum thrust.
-    - u_min (numpy.ndarray): Minimum thrust values for each axis.
-    - u_max (numpy.ndarray): Maximum thrust values for each axis.
+    - max_thrust (float): Absolute maximum acceleration of the drone.
+    - u_min (numpy.ndarray): Minimum acceleration of the drone.
+    - u_max (numpy.ndarray): Maximum acceleration of the drone.
     - A (numpy.ndarray): State space matrix A for the drone dynamics.
     - B (numpy.ndarray): State space matrix B for the drone dynamics.
     - C (numpy.ndarray): Output matrix C for the drone dynamics.
@@ -27,65 +25,38 @@ class drone_dynamics:
     x_dot = Ax + Bu
         y = Cx + Du
 
-    x = [u, v, w, x, y, z]
-    u = [Fx, Fy, Fz]
+    x = [x, y, z, vx, vy, vz]
+    u = [ax, ay, az]
 
-    A =    [[0., 0., 0., 0., 0., 0.],  B = 1/m [[1., 0., 0.],
-            [0., 0., 0., 0., 0., 0.],           [0., 1., 0.],
-            [0., 0., 0., 0., 0., 0.],           [0., 0., 1.],
-            [1., 0., 0., 0., 0., 0.],           [0., 0., 0.],
-            [0., 1., 0., 0., 0., 0.],           [0., 0., 0.],
-            [0., 0., 1., 0., 0., 0.]]           [0., 0., 0.]]
+    A =    [[0., 0., 0., 1., 0., 0.],   B = [[1., 0., 0.],
+            [0., 0., 0., 0., 1., 0.],        [0., 1., 0.],
+            [0., 0., 0., 0., 0., 1.],        [0., 0., 1.],
+            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.]]        [0., 0., 0.]]
 
-    C =    [[1., 0., 0., 0., 0., 0.],      D = [[0., 0., 0.],
-            [0., 1., 0., 0., 0., 0.],           [0., 0., 0.],
-            [0., 0., 1., 0., 0., 0.],           [0., 0., 0.],
-            [0., 0., 0., 1., 0., 0.],           [0., 0., 0.],
-            [0., 0., 0., 0., 1., 0.],           [0., 0., 0.],
-            [0., 0., 0., 0., 0., 1.]]           [0., 0., 0.]]
+    C =    [[1., 0., 0., 0., 0., 0.],   D = [[0., 0., 0.],
+            [0., 1., 0., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 1., 0., 0., 0.],        [0., 0., 0.],
     """
 
-    def __init__(self, mass=20, max_thrust=200):
-        self.m = mass # mass of the drone
-        self.max_thrust = max_thrust # absolute maximum thrust
-        self.u_min = -self.max_thrust*np.ones(3,) # minimum thrust
-        self.u_max = self.max_thrust*np.ones(3,) # maximum thrust
+    def __init__(self,max_acc=10):
+        self.max_acc = max_acc # absolute maximum acceleration
+        self.u_min = -self.max_acc*np.ones(3,) # minimum acceleration
+        self.u_max = self.max_acc*np.ones(3,) # maximum acceleration
 
-        """
-        State space model
-
-        x_dot = Ax + Bu
-            y = Cx + Du
-
-        x = [u, v, w, x, y, z]
-        u = [Fx, Fy, Fz]
-
-        A =    [[0., 0., 0., 0., 0., 0.],   B = 1/m [[1., 0., 0.],
-                [0., 0., 0., 0., 0., 0.],            [0., 1., 0.],
-                [0., 0., 0., 0., 0., 0.],            [0., 0., 1.],
-                [1., 0., 0., 0., 0., 0.],            [0., 0., 0.],
-                [0., 1., 0., 0., 0., 0.],            [0., 0., 0.],
-                [0., 0., 1., 0., 0., 0.]]            [0., 0., 0.]]
-
-        C =     [[1., 0., 0., 0., 0., 0.]       D = [[0., 0., 0.],
-                 [0., 1., 0., 0., 0., 0.]            [0., 0., 0.],
-                 [0., 0., 1., 0., 0., 0.]            [0., 0., 0.],
-                 [0., 0., 0., 1., 0., 0.]            [0., 0., 0.],
-                 [0., 0., 0., 0., 1., 0.]            [0., 0., 0.],
-                 [0., 0., 0., 0., 0., 1.]]           [0., 0., 0.]]           
-        """
         self.A = np.zeros((6,6))
-        self.A[3,0] = 1
-        self.A[4,1] = 1
-        self.A[5,2] = 1
+        self.A[0,3] = 1
+        self.A[1,4] = 1
+        self.A[2,5] = 1
 
         self.B = np.zeros((6,3))
-        self.B[0,0] = 1/self.m
-        self.B[1,1] = 1/self.m
-        self.B[2,2] = 1/self.m
+        self.B[3,0] = 1
+        self.B[4,1] = 1
+        self.B[5,2] = 1
 
         self.C = np.zeros((6,6))
-        for i in range(6):  
+        for i in range(3):  
             self.C[i,i] = 1
 
         self.D = np.zeros((6,3))
@@ -122,15 +93,15 @@ class STL_formulas:
        x_min, x_max, y_min, y_max, z_min, z_max = bounds
 
        # Create predicates a*y >= b for each side of the cuboid
-       a1 = np.zeros((1,6)); a1[:,3] = 1
+       a1 = np.zeros((1,6)); a1[:,0] = 1
        right = LinearPredicate(a1, x_min)
        left = LinearPredicate(-a1, -x_max)
 
-       a2 = np.zeros((1,6)); a2[:,4] = 1
+       a2 = np.zeros((1,6)); a2[:,1] = 1
        front = LinearPredicate(a2, y_min)
        back = LinearPredicate(-a2, -y_max)
 
-       a3 = np.zeros((1,6)); a3[:,5] = 1
+       a3 = np.zeros((1,6)); a3[:,2] = 1
        top = LinearPredicate(a3, z_min)
        bottom = LinearPredicate(-a3, -z_max)
 
@@ -167,15 +138,15 @@ class STL_formulas:
        x_min, x_max, y_min, y_max, z_min, z_max = bounds
 
        # Create predicates a*y >= b for each side of the rectangle
-       a1 = np.zeros((1,6)); a1[:,3] = 1
+       a1 = np.zeros((1,6)); a1[:,0] = 1
        right = LinearPredicate(a1, x_max)
        left = LinearPredicate(-a1, -x_min)
 
-       a2 = np.zeros((1,6)); a2[:,4] = 1
+       a2 = np.zeros((1,6)); a2[:,1] = 1
        front = LinearPredicate(a2, y_max)
        back = LinearPredicate(-a2, -y_min)
 
-       a3 = np.zeros((1,6)); a3[:,5] = 1
+       a3 = np.zeros((1,6)); a3[:,2] = 1
        top = LinearPredicate(a3, z_max)
        bottom = LinearPredicate(-a3, -z_min)
 
@@ -191,14 +162,14 @@ class STLSolver:
         self.spec = spec
 
 
-    def generate_trajectory(self, T=10):
-        dynamics = drone_dynamics()
+    def generate_trajectory(self, max_acc, T=10, verbose = False):
+        dynamics = drone_dynamics(max_acc=max_acc)
         sys = dynamics.getSystem()
 
         Q = np.zeros((6,6))
         R = np.eye(3)
 
-        solver = GurobiMICPSolver(self.spec, sys, self.x0, T, verbose=False)
+        solver = GurobiMICPSolver(self.spec, sys, self.x0, T, verbose=verbose)
         solver.AddQuadraticCost(Q=Q, R=R)
         solver.AddControlBounds(dynamics.u_min, dynamics.u_max)
         x, u, _, _ = solver.Solve()
