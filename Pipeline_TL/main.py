@@ -8,14 +8,14 @@ max_acc = 10
 
 objects = {"goal1": (4, 6, 4, 6, 4, 6),
            "goal2": (-5, -4, -5, -4, -5, -4),
-           "goal3": (-6,-5,4,5,4,5),
+           "goal3": (-6, -5, 4, 5, 4, 5),
            "obstacle1": (-1.5, -0.5, -1.5, -0.5, -1.5, -0.5),
            "obstacle2": (1.0, 2.0, 1.0, 2.0, 1.5, 2.5),
            "obstacle3": (1.0, 2.0, 0.0, 1.0, -1.0, 1.0)}
 
 x0 = np.array([0.,0.,0.,0.,0.,0.])
 
-user_input = [{"role": "user", "content": "Go to goal 1, 2 and 3. Avoid obstacle 3."}]
+user_input = [{"role": "user", "content": "Go to goal 1, 2 and 3. Avoid all obstacles."}]
 
 
 translator = NL_to_STL()
@@ -30,4 +30,6 @@ print("x: ", x)
 print("u: ", u)
 
 visualizer = Visualization(x, objects)
-visualizer.visualize()
+#visualizer.visualize()
+gif_name = "basic_test.gif"
+visualizer.animate_trajectory(gif_name)
