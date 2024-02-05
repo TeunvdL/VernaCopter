@@ -2,7 +2,7 @@ from openai import OpenAI
 
 class GPT:
     """
-    ChatGPT_move_to class for ChatGPT interaction.
+    Class for ChatGPT interaction.
     
     """
     def __init__(self):
