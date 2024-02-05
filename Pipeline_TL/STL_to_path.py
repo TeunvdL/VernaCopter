@@ -1,7 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from stlpy.systems import LinearSystem
-from stlpy.STL import LinearPredicate
+from stlpy.STL import LinearPredicate, NonlinearPredicate
 from stlpy.solvers import GurobiMICPSolver
 
 class drone_dynamics:
@@ -38,6 +37,9 @@ class drone_dynamics:
     C =    [[1., 0., 0., 0., 0., 0.],   D = [[0., 0., 0.],
             [0., 1., 0., 0., 0., 0.],        [0., 0., 0.],
             [0., 0., 1., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.]]        [0., 0., 0.]]
     """
 
     def __init__(self,max_acc=10):
@@ -127,11 +129,11 @@ class STL_formulas:
       y_min     +-------------------+
                 x_min              x_max
 
-       :param bounds:      Tuple ``(x_min, x_max, y_min, y_max, z_min, z_max)`` 
-                            containing the bounds of the rectangle. 
+       :param bounds:           Tuple ``(x_min, x_max, y_min, y_max, z_min, z_max)`` 
+                                    containing the bounds of the rectangle. 
        
-       :return outside_cuboid:   An ``STLFormula`` specifying being outside the
-                                   cuboid at time zero.
+       :return outside_cuboid:  An ``STLFormula`` specifying being outside the
+                                    cuboid at time zero.
        """
 
        # Unpack the bounds
@@ -155,6 +157,90 @@ class STL_formulas:
 
        return outside_cuboid
     
+    def inside_sphere(params):
+        """
+        Create an STL formula representing being inside a
+        sphere with the given center and radius:
+
+        ::
+                         *********
+                   **                 **
+               **                         **
+            **                               **
+          **                                   **
+         **                 ___                 **
+        **        *********     *********        **
+        **  *****                    r    *****  **
+        ***                  o----------------- ***  
+        **  *****           C             *****  **
+        **        ********* ___ *********        **
+         **                                     **
+          **                                  **
+            **                               **
+               **                         **  
+                   **                 **                            
+                         *********
+
+        :param parameters:      Tuple ``(center_x, center_y, center_z, radius)`` containing
+                                    the center and radius of the sphere.
+        :return inside_sphere:  An ``STLFormula`` specifying being inside the
+                                    sphere at time zero.
+        """
+
+        # Unpack the parameters
+        x_center, y_center, z_center, radius = params
+       
+        # Define the predicate function g(y) >= 0
+        def g(y):
+            y1 = y[0]
+            y2 = y[1]
+            y3 = y[2]
+            return radius**2 - (y1-x_center)**2 - (y2-y_center)**2 - (y3-z_center)**2
+
+        return NonlinearPredicate(g, d=6)
+    
+    def outside_sphere(params):
+        """
+        Create an STL formula representing being outside a
+        sphere with the given center and radius:
+
+        ::
+                         *********
+                   **                 **
+               **                         **
+            **                               **
+          **                                   **
+         **                 ___                 **
+        **        *********     *********        **
+        **  *****                    r    *****  **
+        ***                  o----------------- ***  
+        **  *****           C             *****  **
+        **        ********* ___ *********        **
+         **                                     **
+          **                                  **
+            **                               **
+               **                         **  
+                   **                 **                            
+                         *********
+
+        :param params:      Tuple ``(center_x, center_y, center_z, radius)`` containing
+                                    the center and radius of the sphere.
+        :return outside_sphere: An ``STLFormula`` specifying being outside the
+                                    sphere at time zero.
+        """
+
+        # Unpack the parameters
+        x_center, y_center, z_center, radius = params
+       
+        # Define the predicate function g(y) >= 0
+        def g(y):
+            y1 = y[0]
+            y2 = y[1]
+            y3 = y[2]
+            return (y1-x_center)**2 + (y2-y_center)**2 + (y3-z_center)**2 - radius**2
+
+        return NonlinearPredicate(g, d=6)
+    
 
 class STLSolver:
     def __init__(self, spec, x0 = np.zeros(6,), T=10):
@@ -166,8 +252,8 @@ class STLSolver:
         dynamics = drone_dynamics(max_acc=max_acc)
         sys = dynamics.getSystem()
 
-        Q = np.zeros((6,6))
-        R = np.eye(3)
+        Q = np.zeros((6,6))     # state cost   : penalize position error
+        R = np.eye(3)           # control cost : penalize control effort
 
         solver = GurobiMICPSolver(self.spec, sys, self.x0, T, verbose=verbose)
         solver.AddQuadraticCost(Q=Q, R=R)
