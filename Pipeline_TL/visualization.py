@@ -136,8 +136,8 @@ class Visualization:
         return self.anim_fig, self.anim_ax 
     
     def plot_distance_to_objects(self):
-        distances = np.zeros((len(self.x), len(self.objects)))
-        for i in range(len(self.x)):
+        distances = np.zeros((self.x.shape[1], len(self.objects)))
+        for i in range(self.x.shape[1]):
             for j, obj in enumerate(self.objects.values()):
                 distances[i,j] = self.distance_to_cuboid(self.x[:3,i], obj)
         
@@ -147,6 +147,7 @@ class Visualization:
         ax.set_ylabel('Distance')
         ax.plot(distances)
         ax.legend(self.objects.keys()) 
+        ax.grid()
     
     def distance_to_cuboid(self, coordinate, bounds):
         """
