@@ -11,7 +11,9 @@ class NL_to_STL:
     def __init__(self):
         
         self.functions = ["STL_formulas.inside_cuboid(object)",
-                          "STL_formulas.outside_cuboid(object)"]
+                          "STL_formulas.outside_cuboid(object)",
+                          "STL_formulas.inside_sphere(object)",
+                          "STL_formulas.outside_sphere(object)",]
         
         self.STL_operators = ["&", "|"]
 
