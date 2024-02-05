@@ -4,7 +4,7 @@ import matplotlib as mpl
 from matplotlib import animation
 
 class Visualization:
-    def __init__(self, x, objects): 
+    def __init__(self, x, objects, animate = False): 
         self.x = x[3:6, :]                      # waypoints (only positions)
         self.objects = objects                  # objects
         self.dt = 0.05                          # time step
@@ -15,8 +15,9 @@ class Visualization:
         T = (self.n_points-1)*self.dT           # total time
         self.N = int(T/self.dt)                 # number of time steps
 
-        self.fig = plt.figure(figsize=(6,6))
-        self.ax = self.fig.add_subplot(111, projection='3d')
+        if animate:
+            self.anim_fig = plt.figure(figsize=(6,6))
+            self.anim_ax = self.anim_fig.add_subplot(111, projection='3d')
     
     def visualize(self):
         """
@@ -59,7 +60,6 @@ class Visualization:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        plt.show()
 
 
     def get_clwh(self, object):
@@ -108,33 +108,75 @@ class Visualization:
             self.trajectories[:,t:t+len(self.times)] = trajectory
             t += int(self.dT/self.dt)
 
-        anim = animation.FuncAnimation(self.fig, self.animate, frames=self.N, interval=50, blit=False)
+        anim = animation.FuncAnimation(self.anim_fig, self.animate, frames=self.N, interval=50, blit=False)
         print("Saving animation...")
         anim.save(gif_name)
 
     def animate(self, i):
-        self.ax.clear()
-        self.ax.set_xlabel('x')
-        self.ax.set_ylabel('y')
-        self.ax.set_zlabel('z')
-        self.ax.set_xlim(-5,5)
-        self.ax.set_ylim(-5,5)
-        self.ax.set_zlim(-5,5)
-        self.ax.scatter(self.trajectories[0,i], self.trajectories[1,i], self.trajectories[2,i], s = 3, marker='o')
+        self.anim_ax.clear()
+        self.anim_ax.set_xlabel('x')
+        self.anim_ax.set_ylabel('y')
+        self.anim_ax.set_zlabel('z')
+        self.anim_ax.set_xlim(-5,5)
+        self.anim_ax.set_ylim(-5,5)
+        self.anim_ax.set_zlim(-5,5)
+        self.anim_ax.scatter(self.trajectories[0,i], self.trajectories[1,i], self.trajectories[2,i], s = 3, marker='o')
         
         for object in self.objects:
             center, length, width, height = self.get_clwh(object)
             X, Y, Z = shapes.make_cuboid(center, (length, width, height))
             # check if object name contains 'obstacle' or 'goal'
             if 'obstacle' in object:
-                self.ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+                self.anim_ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             elif 'goal' in object:
-                self.ax.plot_surface(X, Y, Z, color='g', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+                self.anim_ax.plot_surface(X, Y, Z, color='g', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             # show object names
-            self.ax.text(center[0], center[1], center[2], object)
+            self.anim_ax.text(center[0], center[1], center[2], object)
         
-        return self.fig, self.ax 
+        return self.anim_fig, self.anim_ax 
+    
+    def plot_distance_to_objects(self):
+        distances = np.zeros((len(self.x), len(self.objects)))
+        for i in range(len(self.x)):
+            for j, obj in enumerate(self.objects.values()):
+                distances[i,j] = self.distance_to_cuboid(self.x[:3,i], obj)
+        
+        distfig, ax = plt.subplots(figsize=(8,5))
+        ax.set_title('Distance to objects')
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Distance')
+        ax.plot(distances)
+        ax.legend(self.objects.keys()) 
+    
+    def distance_to_cuboid(self, coordinate, bounds):
+        """
+        Calculate the distance from a point to a cuboid.
+        """
+        x, y, z = coordinate
+        xmin, xmax, ymin, ymax, zmin, zmax = bounds
 
+        if x < xmin:
+            a = xmin
+        elif x > xmax:
+            a = xmax
+        else:
+            a = x
+
+        if y < ymin:
+            b = ymin
+        elif y > ymax:
+            b = ymax
+        else:
+            b = y
+
+        if z < zmin:
+            c = zmin
+        elif z > zmax:
+            c = zmax
+        else:
+            c = z
+
+        return np.sqrt((x-a)**2 + (y-b)**2 + (z-c)**2)
 
 
 class shapes:
