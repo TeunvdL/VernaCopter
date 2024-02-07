@@ -42,10 +42,11 @@ class drone_dynamics:
             [0., 0., 0., 0., 0., 0.]]        [0., 0., 0.]]
     """
 
-    def __init__(self,max_acc=10):
-        self.max_acc = max_acc # absolute maximum acceleration
-        self.u_min = -self.max_acc*np.ones(3,) # minimum acceleration
-        self.u_max = self.max_acc*np.ones(3,) # maximum acceleration
+    def __init__(self, dt=0.1, max_acc=10):
+        self.dt = dt                            # time step
+        self.max_acc = max_acc                  # absolute maximum acceleration
+        self.u_min = -self.max_acc*np.ones(3,)  # minimum acceleration
+        self.u_max = self.max_acc*np.ones(3,)   # maximum acceleration
 
         self.A = np.zeros((6,6))
         self.A[0,3] = 1
@@ -62,9 +63,12 @@ class drone_dynamics:
             self.C[i,i] = 1
 
         self.D = np.zeros((6,3))
+
+        self.A_tilde = np.eye(6) + self.A*self.dt
+        self.B_tilde = self.B*self.dt
     
     def getSystem(self):
-        sys = LinearSystem(self.A,self.B,self.C,self.D)
+        sys = LinearSystem(self.A_tilde,self.B_tilde,self.C,self.D)
         return sys
     
 
@@ -74,14 +78,16 @@ class STLSolver:
         self.x0 = x0
         self.T = T
 
-    def generate_trajectory(self, max_acc, verbose = False):
-        dynamics = drone_dynamics(max_acc=max_acc)
+    def generate_trajectory(self, dt, max_acc, verbose = False):
+        max_acc = max_acc
+        dynamics = drone_dynamics(dt=dt, max_acc=max_acc)
         sys = dynamics.getSystem()
 
         Q = np.zeros((6,6))     # state cost   : penalize position error
         R = np.eye(3)           # control cost : penalize control effort
 
-        solver = GurobiMICPSolver(self.spec, sys, self.x0, self.T, verbose=verbose)
+        N = int(self.T/dynamics.dt)
+        solver = GurobiMICPSolver(self.spec, sys, self.x0, N, verbose=verbose)
         solver.AddQuadraticCost(Q=Q, R=R)
         solver.AddControlBounds(dynamics.u_min, dynamics.u_max)
         x, u, _, _ = solver.Solve()

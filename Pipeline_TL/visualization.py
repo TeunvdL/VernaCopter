@@ -5,7 +5,7 @@ from matplotlib import animation
 
 class Visualization:
     def __init__(self, x, objects, animate = False): 
-        self.x = x[3:6, :]                      # waypoints (only positions)
+        self.x = x[:3, :]                       # waypoints (only positions)
         self.objects = objects                  # objects
         self.dt = 0.05                          # time step
         self.dT = 1                             # time to reach target

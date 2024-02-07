@@ -3,7 +3,8 @@ from GPT import *
 from NL_to_STL import *
 from visualization import *
 
-max_T = 10          # time horizon in seconds 
+T_max = 10          # time horizon in seconds 
+dt = 0.5            # time step in seconds
 max_acc = 10        # maximum acceleration in m/s^2
 
 objects = {"goal1": (4, 6, 4, 6, 4, 6),
@@ -18,12 +19,12 @@ x0 = np.array([0.,0.,0.,0.,0.,0.]) # initial state: x, y, z, vx, vy, vz
 user_input = [{"role": "user", "content": "Go to goal 1, 2 and 3. Avoid all obstacles."}]
 
 
-translator = NL_to_STL()
-spec = translator.extract_STL_formula(user_input, objects, max_T)
+translator = NL_to_STL(objects, T_max, dt)
+spec = translator.extract_STL_formula(user_input)
 
-solver = STLSolver(spec, x0, max_T)
+solver = STLSolver(spec, x0, T_max)
 
-x,u = solver.generate_trajectory(max_acc, verbose=True)
+x,u = solver.generate_trajectory(dt, max_acc, verbose=True)
 
 print("x: ", x)
 
