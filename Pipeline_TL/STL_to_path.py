@@ -45,8 +45,6 @@ class drone_dynamics:
     def __init__(self, dt=0.1, max_acc=10):
         self.dt = dt                            # time step
         self.max_acc = max_acc                  # absolute maximum acceleration
-        self.u_min = -self.max_acc*np.ones(3,)  # minimum acceleration
-        self.u_max = self.max_acc*np.ones(3,)   # maximum acceleration
 
         self.A = np.zeros((6,6))
         self.A[0,3] = 1
@@ -78,8 +76,7 @@ class STLSolver:
         self.x0 = x0
         self.T = T
 
-    def generate_trajectory(self, dt, max_acc, verbose = False):
-        max_acc = max_acc
+    def generate_trajectory(self, dt, max_acc, max_speed, verbose = False):
         dynamics = drone_dynamics(dt=dt, max_acc=max_acc)
         sys = dynamics.getSystem()
 
@@ -89,14 +86,18 @@ class STLSolver:
         N = int(self.T/dynamics.dt)
         solver = GurobiMICPSolver(self.spec, sys, self.x0, N, verbose=verbose)
         solver.AddQuadraticCost(Q=Q, R=R)
-        solver.AddControlBounds(dynamics.u_min, dynamics.u_max)
+        u_min = -dynamics.max_acc*np.ones(3,)  # minimum acceleration
+        u_max = dynamics.max_acc*np.ones(3,)   # maximum acceleration
+        solver.AddControlBounds(u_min, u_max)
+        state_bounds = np.array([np.inf, np.inf, np.inf, max_speed, max_speed, max_speed])
+        solver.AddStateBounds(-state_bounds, state_bounds)
         x, u, _, _ = solver.Solve()
 
         return x, u
 
 
 class STL_formulas:
-    def inside_cuboid(bounds):
+    def inside_cuboid(bounds, tolerance=0.1):
        """
        Create an STL formula representing being inside a
        cuboid with the given bounds:
@@ -124,16 +125,16 @@ class STL_formulas:
 
        # Create predicates a*y >= b for each side of the cuboid
        a1 = np.zeros((1,6)); a1[:,0] = 1
-       right = LinearPredicate(a1, x_min)
-       left = LinearPredicate(-a1, -x_max)
+       right = LinearPredicate(a1, x_min + tolerance)
+       left = LinearPredicate(-a1, -x_max + tolerance)
 
        a2 = np.zeros((1,6)); a2[:,1] = 1
-       front = LinearPredicate(a2, y_min)
-       back = LinearPredicate(-a2, -y_max)
+       front = LinearPredicate(a2, y_min + tolerance)
+       back = LinearPredicate(-a2, -y_max + tolerance)
 
        a3 = np.zeros((1,6)); a3[:,2] = 1
-       top = LinearPredicate(a3, z_min)
-       bottom = LinearPredicate(-a3, -z_max)
+       top = LinearPredicate(a3, z_min + tolerance)
+       bottom = LinearPredicate(-a3, -z_max + tolerance)
 
        # Take the conjuction across all the sides
        inside_cuboid = right & left & front & back & top & bottom
@@ -141,7 +142,7 @@ class STL_formulas:
        return inside_cuboid
 
 
-    def outside_cuboid(bounds):
+    def outside_cuboid(bounds, tolerance=0.1):
        """
        Create an STL formula representing being outside a
        cuboid with the given bounds:
@@ -169,16 +170,16 @@ class STL_formulas:
 
        # Create predicates a*y >= b for each side of the rectangle
        a1 = np.zeros((1,6)); a1[:,0] = 1
-       right = LinearPredicate(a1, x_max)
-       left = LinearPredicate(-a1, -x_min)
+       right = LinearPredicate(a1, x_max + tolerance)
+       left = LinearPredicate(-a1, -x_min + tolerance)
 
        a2 = np.zeros((1,6)); a2[:,1] = 1
-       front = LinearPredicate(a2, y_max)
-       back = LinearPredicate(-a2, -y_min)
+       front = LinearPredicate(a2, y_max + tolerance)
+       back = LinearPredicate(-a2, -y_min + tolerance)
 
        a3 = np.zeros((1,6)); a3[:,2] = 1
-       top = LinearPredicate(a3, z_max)
-       bottom = LinearPredicate(-a3, -z_min)
+       top = LinearPredicate(a3, z_max + tolerance)
+       bottom = LinearPredicate(-a3, -z_min + tolerance)
 
        # Take the disjuction across all the sides
        outside_cuboid = right | left | front | back | top | bottom
