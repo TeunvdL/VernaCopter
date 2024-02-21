@@ -54,12 +54,18 @@ class Visualization:
                 ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             elif 'goal' in object:
                 ax.plot_surface(X, Y, Z, color='g', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+            elif 'wall' in object:
+                ax.plot_surface(X, Y, Z, color='gray', rstride=1, cstride=1, alpha=0.05, linewidth=1., edgecolor='k')
+            else:
+                ax.plot_surface(X, Y, Z, color='b', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             # show object names
             ax.text(center[0], center[1], center[2], object)
 
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+
+        return fig, ax
 
 
     def get_clwh(self, object):
