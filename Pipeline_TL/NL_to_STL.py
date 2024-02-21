@@ -8,16 +8,17 @@ class NL_to_STL:
 
     """
 
-    def __init__(self, objects, T_max, dt):
+    def __init__(self, objects, T_max, dt, print_instructions=False):
         self.objects = objects
         self.T_max = T_max
         self.dt = dt
+        self.print_instructions = print_instructions
         self.functions = ["STL_formulas.inside_cuboid(object)",
                           "STL_formulas.outside_cuboid(object)",
                           "STL_formulas.inside_sphere(object)",
                           "STL_formulas.outside_sphere(object)",]
         self.STL_operators = ["&", "|"]
-        self.STL_functions = ["eventually(T1, T2)", "always(T1, T2)"]
+        self.STL_functions = ["eventually(t1, t2)", "always(t1, t2)", "until(other, t1, t2)"]
 
     
     def load_chatgpt_instructions(self):
@@ -38,6 +39,8 @@ class NL_to_STL:
         gpt = GPT()
         instructions_template = self.load_chatgpt_instructions()
         instructions = self.insert_instruction_variables(instructions_template)
+        if self.print_instructions:
+            print("Instructions: ", instructions)
         init_messages = [{"role": "system", "content": instructions}]
         response = gpt.chatcompletion(init_messages, user_input)
         print("GPT response: ", response)
@@ -50,5 +53,6 @@ class NL_to_STL:
         start = response.find("<")
         end = response.find(">")
         STL_formula = response[start+1:end]
+        STL_formula = STL_formula.replace("\n", " ")
         print("Extracted STL formula: ", STL_formula)
-        return eval(STL_formula)
+        return STL_formula
