@@ -1,6 +1,7 @@
 from GPT import *
 from STL_to_path import *
 import os
+import time
 
 class NL_to_STL:
     """
@@ -13,13 +14,44 @@ class NL_to_STL:
         self.T_max = T_max
         self.dt = dt
         self.print_instructions = print_instructions
-        self.functions = ["STL_formulas.inside_cuboid(object)",
-                          "STL_formulas.outside_cuboid(object)",
-                          "STL_formulas.inside_sphere(object)",
-                          "STL_formulas.outside_sphere(object)",]
-        self.STL_operators = ["&", "|"]
-        self.STL_functions = ["eventually(t1, t2)", "always(t1, t2)", "until(other, t1, t2)"]
 
+    def generate_specs(self):
+        response = self.gpt_conversation()
+        specs = self.extract_specs(response)
+        return specs
+
+    def gpt_conversation(self, max_inputs=5):
+        gpt = GPT()
+        instructions_template = self.load_chatgpt_instructions()
+        instructions = self.insert_instruction_variables(instructions_template)
+        if self.print_instructions:
+            print("Instructions: ", instructions, "\n", "______________________________")
+        messages = [{"role": "system", "content": instructions}]   
+
+        print("Please specify the task. Type 'quit' to exit conversation.")
+        for i in range(max_inputs):
+            user_input = input("User: ")
+
+            if user_input.lower() == 'quit':
+                print("Exited conversation")
+                break
+
+            messages.append({"role": "user", "content": user_input})
+            response = gpt.chatcompletion(messages)
+            messages.append({"role": "assistant", "content": response})
+
+            # check if < or > symbol is present in the response and exit conversation if detected
+            if '<' in response:
+                print("The final specification was generated. Exiting conversation.")
+                break
+
+            print("Assistant:", response)
+
+            # pause for a short time such that the response is printed properly
+            time.sleep(0.5)
+        
+        final_response = messages[-1]["content"]
+        return final_response
     
     def load_chatgpt_instructions(self):
         path = os.path.dirname(os.path.abspath(__file__))
@@ -29,30 +61,17 @@ class NL_to_STL:
     
     def insert_instruction_variables(self, instructions):
         instructions = instructions.replace("OBJECTS", str(self.objects))
-        instructions = instructions.replace("FUNCTIONS", str(self.functions))
-        instructions = instructions.replace("STL_OPERATORS", str(self.STL_operators))
-        instructions = instructions.replace("STL_FUNCTIONS", str(self.STL_functions))
         instructions = instructions.replace("T_MAX", str(self.T_max))
         return instructions
     
-    def get_gpt_response(self, user_input):
-        gpt = GPT()
-        instructions_template = self.load_chatgpt_instructions()
-        instructions = self.insert_instruction_variables(instructions_template)
-        if self.print_instructions:
-            print("Instructions: ", instructions)
-        init_messages = [{"role": "system", "content": instructions}]
-        response = gpt.chatcompletion(init_messages, user_input)
-        print("GPT response: ", response)
-        return response
-
-    def extract_STL_formula(self, user_input):
-        objects = self.objects
-        N_max = int(self.T_max/self.dt)
-        response = self.get_gpt_response(user_input)
-        start = response.find("<")
-        end = response.find(">")
-        STL_formula = response[start+1:end]
-        STL_formula = STL_formula.replace("\n", " ")
-        print("Extracted STL formula: ", STL_formula)
-        return STL_formula
+    def extract_specs(self, response):
+        specs = []
+        start = 0
+        while True:
+            start = response.find("<", start)
+            if start == -1:
+                break
+            end = response.find(">", start)
+            specs.append(response[start+1:end])
+            start = end
+        return specs
