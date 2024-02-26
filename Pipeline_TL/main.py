@@ -3,28 +3,32 @@ from GPT import *
 from NL_to_STL import *
 from visualization import *
 
-T_max = 10          # time horizon in seconds 
+T_max = 20          # time horizon in seconds 
 dt = 0.5            # time step in seconds
-max_acc = 10        # maximum acceleration in m/s^2
+N = int(T_max/dt)   # number of time steps
+max_acc = 50        # maximum acceleration in m/s^2
+max_speed = 1       # maximum speed in m/s
 
-objects = {"goal1": (4, 6, 4, 6, 4, 6),
-           "goal2": (-5, -4, -5, -4, -5, -4),
-           "goal3": (-6, -5, 4, 5, 4, 5),
-           "obstacle1": (-1.5, -0.5, -1.5, -0.5, -1.5, -0.5),
-           "obstacle2": (1.0, 2.0, 1.0, 2.0, 1.5, 2.5),
-           "obstacle3": (1.0, 2.0, 0.0, 1.0, -1.0, 1.0),}
+objects = {"key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
+           "chest": (-4.25, -3, -4.5, -3.75, 0., 0.75),
+           "door": (0., 0.5, -2.5, -1, 0., 2.5),
+           "bounds": (-5., 5., -5., 5., 0., 3.),
+           "NE_inside_wall": (2., 5., 3., 3.5, 0., 3.),
+           "south_mid_inside_wall": (0., 0.5, -5., -2.5, 0., 3.),
+           "north_mid_inside_wall": (0., 0.5, -1., 5., 0., 3.),
+           "west_inside_wall": (-2.25, -1.75, -5., 3.5, 0., 3.),
+           "top_door": (0., 0.5, -2.5, -1, 2.5, 3.),
+           }
 
 x0 = np.array([0.,0.,0.,0.,0.,0.]) # initial state: x, y, z, vx, vy, vz
 
-user_input = [{"role": "user", "content": "Go to goal 1, 2 and 3. Avoid all obstacles."}]
+translator = NL_to_STL(objects, T_max, dt, print_instructions=True)
+specs = translator.generate_specs()
+print("specs: ", specs)
 
+solver = STLSolver(specs, objects, x0, T_max)
 
-translator = NL_to_STL(objects, T_max, dt)
-spec = translator.extract_STL_formula(user_input)
-
-solver = STLSolver(spec, x0, T_max)
-
-x,u = solver.generate_trajectory(dt, max_acc, verbose=True)
+x,u = solver.generate_trajectories(dt, max_acc, max_speed, verbose=True)
 
 print("x: ", x)
 
