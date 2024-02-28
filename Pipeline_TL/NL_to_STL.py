@@ -9,49 +9,50 @@ class NL_to_STL:
 
     """
 
-    def __init__(self, objects, T_max, dt, print_instructions=False):
+    def __init__(self, objects, N, dt, print_instructions=False):
         self.objects = objects
-        self.T_max = T_max
         self.dt = dt
+        self.N = N
         self.print_instructions = print_instructions
+        self.gpt = GPT()
 
-    def generate_specs(self):
-        response = self.gpt_conversation()
+    def get_specs(self, messages):
+        response = messages[-1]['content']
         specs = self.extract_specs(response)
         return specs
 
-    def gpt_conversation(self, max_inputs=5):
-        gpt = GPT()
-        instructions_template = self.load_chatgpt_instructions()
-        instructions = self.insert_instruction_variables(instructions_template)
-        if self.print_instructions:
-            print("Instructions: ", instructions, "\n", "______________________________")
-        messages = [{"role": "system", "content": instructions}]   
+    def gpt_conversation(self, max_inputs=5, previous_messages=[]):
+        
+        if not previous_messages:
+            instructions_template = self.load_chatgpt_instructions()
+            instructions = self.insert_instruction_variables(instructions_template)
+            if self.print_instructions:
+                print("Instructions: ", instructions, "\n", "______________________________")
+            messages = [{"role": "system", "content": instructions}]
+        else:
+            messages = previous_messages   
 
         print("Please specify the task. Type 'quit' to exit conversation.")
-        for i in range(max_inputs):
+        status = "active"
+        for _ in range(max_inputs):
             user_input = input("User: ")
 
             if user_input.lower() == 'quit':
                 print("Exited conversation")
+                status = "exited"
                 break
 
             messages.append({"role": "user", "content": user_input})
-            response = gpt.chatcompletion(messages)
+            response = self.gpt.chatcompletion(messages)
             messages.append({"role": "assistant", "content": response})
+            print("Assistant:", response)
 
             # check if < or > symbol is present in the response and exit conversation if detected
             if '<' in response:
-                print("The final specification was generated. Exiting conversation.")
+                print("The specification was generated.")
                 break
-
-            print("Assistant:", response)
-
-            # pause for a short time such that the response is printed properly
-            time.sleep(0.5)
-        
-        final_response = messages[-1]["content"]
-        return final_response
+    
+        return messages, status
     
     def load_chatgpt_instructions(self):
         path = os.path.dirname(os.path.abspath(__file__))
@@ -61,7 +62,7 @@ class NL_to_STL:
     
     def insert_instruction_variables(self, instructions):
         instructions = instructions.replace("OBJECTS", str(self.objects))
-        instructions = instructions.replace("T_MAX", str(self.T_max))
+        instructions = instructions.replace("T_MAX", str(self.N))
         return instructions
     
     def extract_specs(self, response):
