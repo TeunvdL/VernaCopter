@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib import animation
 
-class Visualization:
+class Visualizer:
     def __init__(self, x, objects, animate = False): 
         self.x = x[:3, :]                       # waypoints (only positions)
         self.objects = objects                  # objects
@@ -19,7 +19,7 @@ class Visualization:
             self.anim_fig = plt.figure(figsize=(6,6))
             self.anim_ax = self.anim_fig.add_subplot(111, projection='3d')
     
-    def visualize(self):
+    def visualize_trajectory(self):
         """
         Visualize the trajectory.
 
