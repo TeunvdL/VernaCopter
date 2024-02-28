@@ -56,6 +56,14 @@ class Visualizer:
                 ax.plot_surface(X, Y, Z, color='g', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             elif 'wall' in object:
                 ax.plot_surface(X, Y, Z, color='gray', rstride=1, cstride=1, alpha=0.05, linewidth=1., edgecolor='k')
+            elif 'door' in object:
+                ax.plot_surface(X, Y, Z, color='brown', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+            elif 'key' in object:
+                ax.plot_surface(X, Y, Z, color='green', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+            elif 'chest' in object:
+                ax.plot_surface(X, Y, Z, color='yellow', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+            elif 'bounds' in object:
+                pass
             else:
                 ax.plot_surface(X, Y, Z, color='b', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
             # show object names
@@ -64,6 +72,10 @@ class Visualizer:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+
+        ax.set_xlim(-6, 6)
+        ax.set_ylim(-6, 6)
+        ax.set_zlim(0, 8.5)
 
         return fig, ax
 
