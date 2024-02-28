@@ -17,7 +17,7 @@ objects = {"key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
            "south_mid_inside_wall": (0., 0.5, -5., -2.5, 0., 3.),
            "north_mid_inside_wall": (0., 0.5, -1., 5., 0., 3.),
            "west_inside_wall": (-2.25, -1.75, -5., 3.5, 0., 3.),
-           "top_door": (0., 0.5, -2.5, -1, 2.5, 3.),
+           "above_door_wall": (0., 0.5, -2.5, -1, 2.5, 3.),
            }
 
 x0 = np.array([0.,0.,0.,0.,0.,0.]) # initial state: x, y, z, vx, vy, vz
@@ -35,13 +35,12 @@ print("x: ", x)
 print("u: ", u)
 
 animate = False
-visualizer = Visualization(x, objects, animate=animate)
+visualizer = Visualizer(x, objects, animate=animate)
 
 if animate:
     gif_name = input("Enter name of GIF file: ")
     visualizer.animate_trajectory(gif_name + ".gif")
 
-visualizer.visualize()
+visualizer.visualize_trajectory()
 visualizer.plot_distance_to_objects()
-
 plt.show()
