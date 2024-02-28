@@ -92,14 +92,14 @@ class STLSolver:
         x0 = self.x0
         for i in range(N_specs):
             print("Solving for spec ", i+1, " of ", N_specs)
-            print("Current x0: ", x0)
+            #print("Current x0: ", x0)
             print("Current spec: ", self.specs[i])
             x, u = self.generate_trajectory(eval(self.specs[i]), x0)
             all_x[:,i*(N+1):(i+1)*(N+1)] = x
             all_u[:,i*(N+1):(i+1)*(N+1)] = u
-            print("x: ", x)
-            x0 = x[:,-1]
-            print("New x0: ", x0)
+            #print("x: ", x)
+            #x0 = x[:,-1]
+            #print("New x0: ", x0)
 
         return all_x, all_u
 
