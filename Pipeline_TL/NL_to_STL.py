@@ -2,6 +2,7 @@ from GPT import *
 from STL_to_path import *
 import os
 import time
+from logger import *
 
 class NL_to_STL:
     """
@@ -35,17 +36,17 @@ class NL_to_STL:
         print("Please specify the task. Type 'quit' to exit conversation.")
         status = "active"
         for _ in range(max_inputs):
-            user_input = input("User: ")
+            user_input = input(logger.color_text("User: ", 'orange'))
 
             if user_input.lower() == 'quit':
-                print("Exited conversation")
+                print(logger.color_text("Exited conversation", 'yellow'))
                 status = "exited"
                 break
 
             messages.append({"role": "user", "content": user_input})
             response = self.gpt.chatcompletion(messages)
             messages.append({"role": "assistant", "content": response})
-            print("Assistant:", response)
+            print(logger.color_text("Assistant:", 'cyan'), response)
 
             # check if < or > symbol is present in the response and exit conversation if detected
             if '<' in response:
