@@ -10,10 +10,10 @@ N = int(T/dt)       # number of time steps
 max_acc = 50        # maximum acceleration in m/s^2
 max_speed = 1       # maximum speed in m/s
 
-objects = {"key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
+objects = {"door_key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
            "chest": (-4.25, -3, -4.5, -3.75, 0., 0.75),
            "door": (0., 0.5, -2.5, -1, 0., 2.5),
-           "room_bounds": (-5., 5., -5., 5., 0., 3.),
+           "region_bounds": (-5., 5., -5., 5., 0., 3.),
            "NE_inside_wall": (2., 5., 3., 3.5, 0., 3.),
            "south_mid_inside_wall": (0., 0.5, -5., -2.5, 0., 3.),
            "north_mid_inside_wall": (0., 0.5, -1., 5., 0., 3.),
@@ -22,6 +22,8 @@ objects = {"key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
            }
 
 x0 = np.array([3.,-4.,0.5,0.,0.,0.]) # initial state: x, y, z, vx, vy, vz
+
+syntax_check_enabled = False
 animate_final_trajectory = False
 
 translator = NL_to_STL(objects, N, dt, print_instructions=True)
@@ -35,11 +37,17 @@ while status == "active":
     if status == "exited":
         break
     spec = translator.get_specs(messages)
+    
+    if syntax_check_enabled:
+        spec = translator.gpt_syntax_checker(spec)
+
     solver = STLSolver(spec, objects, x0, T)
     try:
         x,u = solver.generate_trajectories(dt, max_acc, max_speed, verbose=False)
-        #print("x: ", x)
-
+        # check if x is filles with NaNs
+        if np.isnan(x).all():
+            raise Exception("The trajectory is infeasible.")
+        
         visualizer = Visualizer(x, objects, animate=False)
         fig, ax = visualizer.visualize_trajectory()
         visualizer.plot_distance_to_objects()
@@ -61,7 +69,6 @@ while status == "active":
                 print("Invalid input. Please enter 'y' or 'n'.")
 
     except Exception as e:
-        print(e)
         print(logger.color_text("The trajectory is infeasible. Please try again.", 'yellow'))
 
     previous_messages = messages
@@ -69,7 +76,7 @@ while status == "active":
 
 plt.close('all')
 if all_x.shape[1] == 1:
-    print(logger.color_text("No trajectory is generated.", 'yellow'))
+    print(logger.color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
 else:
     print(logger.color_text("The full trajectory is generated.", 'yellow'))
     visualizer = Visualizer(all_x, objects, animate=animate_final_trajectory)
