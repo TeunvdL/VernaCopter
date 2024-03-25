@@ -27,12 +27,12 @@ class drone_dynamics:
     x = [x, y, z, vx, vy, vz]
     u = [ax, ay, az]
 
-    A =    [[0., 0., 0., 1., 0., 0.],   B = [[1., 0., 0.],
-            [0., 0., 0., 0., 1., 0.],        [0., 1., 0.],
-            [0., 0., 0., 0., 0., 1.],        [0., 0., 1.],
-            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
-            [0., 0., 0., 0., 0., 0.],        [0., 0., 0.],
-            [0., 0., 0., 0., 0., 0.]]        [0., 0., 0.]]
+    A =    [[0., 0., 0., 1., 0., 0.],   B = [[0., 0., 0.],
+            [0., 0., 0., 0., 1., 0.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 1.],        [0., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],        [1., 0., 0.],
+            [0., 0., 0., 0., 0., 0.],        [0., 1., 0.],
+            [0., 0., 0., 0., 0., 0.]]        [0., 0., 1.]]
 
     C =    [[1., 0., 0., 0., 0., 0.],   D = [[0., 0., 0.],
             [0., 1., 0., 0., 0., 0.],        [0., 0., 0.],
@@ -71,25 +71,52 @@ class drone_dynamics:
     
 
 class STLSolver:
-    def __init__(self, spec, x0 = np.zeros(6,), T=10):
-        self.spec = spec
+    def __init__(self, specs, objects, x0 = np.zeros(6,), T=10):
+        self.objects = objects
+        self.specs = specs
         self.x0 = x0
         self.T = T
 
-    def generate_trajectory(self, dt, max_acc, max_speed, verbose = False):
-        dynamics = drone_dynamics(dt=dt, max_acc=max_acc)
+    def generate_trajectories(self, dt, max_acc, max_speed, verbose = False):
+        self.dt = dt
+        self.max_acc = max_acc
+        self.max_speed = max_speed
+        self.verbose = verbose
+        objects = self.objects
+        N = int(self.T/self.dt)
+        N_specs = len(self.specs)
+
+        all_x = np.zeros((6, N_specs*(N+1)))
+        all_u = np.zeros((3, N_specs*(N+1)))
+
+        x0 = self.x0
+        for i in range(N_specs):
+            print("Solving for spec ", i+1, " of ", N_specs)
+            #print("Current x0: ", x0)
+            print("Current spec: ", self.specs[i])
+            x, u = self.generate_trajectory(eval(self.specs[i]), x0)
+            all_x[:,i*(N+1):(i+1)*(N+1)] = x
+            all_u[:,i*(N+1):(i+1)*(N+1)] = u
+            #print("x: ", x)
+            #x0 = x[:,-1]
+            #print("New x0: ", x0)
+
+        return all_x, all_u
+
+    def generate_trajectory(self, spec, x0):
+        dynamics = drone_dynamics(dt=self.dt, max_acc=self.max_acc)
         sys = dynamics.getSystem()
 
         Q = np.zeros((6,6))     # state cost   : penalize position error
         R = np.eye(3)           # control cost : penalize control effort
 
         N = int(self.T/dynamics.dt)
-        solver = GurobiMICPSolver(self.spec, sys, self.x0, N, verbose=verbose)
+        solver = GurobiMICPSolver(spec, sys, x0, N, verbose=self.verbose)
         solver.AddQuadraticCost(Q=Q, R=R)
         u_min = -dynamics.max_acc*np.ones(3,)  # minimum acceleration
         u_max = dynamics.max_acc*np.ones(3,)   # maximum acceleration
         solver.AddControlBounds(u_min, u_max)
-        state_bounds = np.array([np.inf, np.inf, np.inf, max_speed, max_speed, max_speed])
+        state_bounds = np.array([np.inf, np.inf, np.inf, self.max_speed, self.max_speed, self.max_speed])
         solver.AddStateBounds(-state_bounds, state_bounds)
         x, u, _, _ = solver.Solve()
 
