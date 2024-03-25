@@ -22,10 +22,10 @@ class NL_to_STL:
         specs = self.extract_specs(response)
         return specs
 
-    def gpt_conversation(self, max_inputs=5, previous_messages=[]):
+    def gpt_conversation(self, max_inputs=10, previous_messages=[]):
         
         if not previous_messages:
-            instructions_template = self.load_chatgpt_instructions()
+            instructions_template = self.load_chatgpt_instructions('ChatGPT_instructions.txt')
             instructions = self.insert_instruction_variables(instructions_template)
             if self.print_instructions:
                 print("Instructions: ", instructions, "\n", "______________________________")
@@ -55,9 +55,19 @@ class NL_to_STL:
     
         return messages, status
     
-    def load_chatgpt_instructions(self):
+    def gpt_syntax_checker(self, spec):
+        instructions_template = self.load_chatgpt_instructions('syntax_checker_instructions.txt')
+        instructions = self.insert_instruction_variables(instructions_template)
+        messages = [{"role": "system", "content": instructions}]
+        messages.append({"role": "user", "content": f'Original specification: {spec}'})
+        response = self.gpt.chatcompletion(messages)
+        print(logger.color_text("Syntax checker:", 'purple'), response)
+        new_spec = self.extract_specs(response)
+        return new_spec
+    
+    def load_chatgpt_instructions(self, filename):
         path = os.path.dirname(os.path.abspath(__file__))
-        instructions_file = open(path + '/ChatGPT_instructions.txt', 'r')
+        instructions_file = open(path + '/' + filename, 'r')
         instructions = instructions_file.read()
         return instructions
     
