@@ -3,25 +3,20 @@ from GPT import *
 from NL_to_STL import *
 from visualization import *
 from logger import *
+from scenarios import *
 
-T = 20              # time horizon in seconds 
-dt = 0.5            # time step in seconds
-N = int(T/dt)       # number of time steps
-max_acc = 50        # maximum acceleration in m/s^2
-max_speed = 1       # maximum speed in m/s
+max_acc = 50                # maximum acceleration in m/s^2
+max_speed = 1               # maximum speed in m/s
+T = 40                      # time horizon in seconds 
+dt = 0.8                    # time step in seconds
+N = int(T/dt)               # total number of time steps
 
-objects = {"door_key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
-           "chest": (-4.25, -3, -4.5, -3.75, 0., 0.75),
-           "door": (0., 0.5, -2.5, -1, 0., 2.5),
-           "region_bounds": (-5., 5., -5., 5., 0., 3.),
-           "NE_inside_wall": (2., 5., 3., 3.5, 0., 3.),
-           "south_mid_inside_wall": (0., 0.5, -5., -2.5, 0., 3.),
-           "north_mid_inside_wall": (0., 0.5, -1., 5., 0., 3.),
-           "west_inside_wall": (-2.25, -1.75, -5., 3.5, 0., 3.),
-           "above_door_wall": (0., 0.5, -2.5, -1, 2.5, 3.),
-           }
+print(logger.color_text(f"dt = {dt}s.", 'yellow'))
 
-x0 = np.array([3.,-4.,0.5,0.,0.,0.]) # initial state: x, y, z, vx, vy, vz
+scenarios = Scenarios()
+scenario = "treasure_hunt" # "reach_avoid", "narrow_maze", "treasure_hunt"
+objects = scenarios.get_objects(scenario)
+x0 = scenarios.get_starting_state(scenario)
 
 syntax_check_enabled = False
 animate_final_trajectory = False
@@ -32,6 +27,7 @@ previous_messages = []
 status = "active"
 all_x = np.expand_dims(x0, axis=1)
 
+# Main loop
 while status == "active":
     messages, status = translator.gpt_conversation(previous_messages=previous_messages)
     if status == "exited":
@@ -43,17 +39,19 @@ while status == "active":
 
     solver = STLSolver(spec, objects, x0, T)
     try:
-        x,u = solver.generate_trajectories(dt, max_acc, max_speed, verbose=False)
-        # check if x is filles with NaNs
+        x,u = solver.generate_trajectories(dt, max_acc, max_speed, verbose=True)
+
         if np.isnan(x).all():
             raise Exception("The trajectory is infeasible.")
         
         visualizer = Visualizer(x, objects, animate=False)
+        print("x: ", x)
         fig, ax = visualizer.visualize_trajectory()
         visualizer.plot_distance_to_objects()
         
         plt.pause(1)
         
+        # Ask the user to accept or reject the trajectory
         while True:
             response = input("Accept the trajectory? (y/n): ")
             if response.lower() == 'y':
@@ -73,7 +71,7 @@ while status == "active":
 
     previous_messages = messages
     
-
+# Visualize the full trajectory
 plt.close('all')
 if all_x.shape[1] == 1:
     print(logger.color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
@@ -83,8 +81,8 @@ else:
     visualizer.visualize_trajectory()
     visualizer.plot_distance_to_objects()
 
-    # if animate_final_trajectory:
-    #    gif_name = input("Enter name of GIF file: ")
-    #    visualizer.animate_trajectory(gif_name + ".gif")
+    if animate_final_trajectory:
+       gif_name = input("Enter name of GIF file: ")
+       visualizer.animate_trajectory(gif_name + ".gif")
 
     plt.show()
