@@ -28,23 +28,11 @@ class Visualizer:
         None.
 
         """
-        dt = 0.05                       # time step
-        dT = 1                          # time to reach target
-        n = int(dT/dt)                  # number of time steps between two targets
-        n_points = self.x.shape[1]      # number of targets
-        times = np.linspace(0, dT, n)   # time array
-        T = (n_points-1)*dT             # total time
-        
         fig = plt.figure(figsize=(6,6))
         ax = fig.add_subplot(111, projection='3d')
-        t = 0
-
-        colormap = mpl.colormaps['winter']
-
-        for i in range(n_points-1):
-            trajectory = self.min_jerk(self.x[:,i], self.x[:,i+1], dT, times)
-            ax.scatter(trajectory[0,:], trajectory[1,:], trajectory[2,:], s = 3, color=colormap(t/T))
-            t += int(dT/dt)
+        ax.set_title('Trajectory')
+        ax.scatter(self.x[0,:], self.x[1,:], self.x[2,:], 'b', label='Trajectory')
+        ax.scatter(self.x[0,0], self.x[1,0], self.x[2,0], c='g', label='Start')
 
         for object in self.objects:
             center, length, width, height = self.get_clwh(object)
