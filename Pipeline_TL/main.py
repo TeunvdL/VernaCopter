@@ -7,8 +7,8 @@ from scenarios import *
 
 max_acc = 50                # maximum acceleration in m/s^2
 max_speed = 1               # maximum speed in m/s
-T = 40                      # time horizon in seconds 
-dt = 0.8                    # time step in seconds
+T = 30                      # time horizon in seconds 
+dt = 0.5                    # time step in seconds
 N = int(T/dt)               # total number of time steps
 
 print(logger.color_text(f"dt = {dt}s.", 'yellow'))
@@ -20,6 +20,8 @@ x0 = scenarios.get_starting_state(scenario)
 
 syntax_check_enabled = False
 animate_final_trajectory = False
+dynamicless_spec_check = True
+solver_verbose = True
 
 translator = NL_to_STL(objects, N, dt, print_instructions=True)
 
@@ -30,19 +32,50 @@ all_x = np.expand_dims(x0, axis=1)
 # Main loop
 while status == "active":
     messages, status = translator.gpt_conversation(previous_messages=previous_messages)
+
     if status == "exited":
         break
     spec = translator.get_specs(messages)
-    
-    if syntax_check_enabled:
-        spec = translator.gpt_syntax_checker(spec)
+    print("Extracted spec: ", spec)
 
     solver = STLSolver(spec, objects, x0, T)
-    try:
-        x,u = solver.generate_trajectories(dt, max_acc, max_speed, verbose=True)
+
+    if dynamicless_spec_check:
+        spec_accepted = False
+        print(logger.color_text("Checking the specification without dynamics...", 'yellow'))
+        #try:
+        no_dynamics_x, no_dynamics_u = solver.generate_trajectory(dt, max_acc, max_speed, verbose=solver_verbose, include_dynamics=False)
+        print("no_dynamics_x: ", no_dynamics_x)
+        no_dynamics_visualizer = Visualizer(no_dynamics_x, objects, animate=False)
+        fig, ax = no_dynamics_visualizer.visualize_trajectory()
+        no_dynamics_visualizer.plot_distance_to_objects()
+        plt.pause(1)
+
+        while True:
+            response = input("Accept the specification? (y/n): ")
+            if response.lower() == 'y':
+                print(logger.color_text("The specification is accepted.", 'yellow'))
+                spec_accepted = True
+                break
+            elif response.lower() == 'n':
+                print(logger.color_text("The specification is rejected.", 'yellow'))
+                break
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+
+        # except:
+        #     print(logger.color_text("The specification is infeasible.", 'yellow'))
+        #     continue
+
+    if not dynamicless_spec_check or spec_accepted:
+        print(logger.color_text("Generating the trajectory...", 'yellow'))
+        #try:
+        x,u = solver.generate_trajectory(dt, max_acc, max_speed, verbose=solver_verbose, include_dynamics=True)
 
         if np.isnan(x).all():
-            raise Exception("The trajectory is infeasible.")
+            print(logger.color_text("The trajectory is infeasible.", 'yellow'))
+            if syntax_check_enabled:
+                print(logger.color_text("Checking syntax...", 'yellow'))
         
         visualizer = Visualizer(x, objects, animate=False)
         print("x: ", x)
@@ -50,7 +83,7 @@ while status == "active":
         visualizer.plot_distance_to_objects()
         
         plt.pause(1)
-        
+    
         # Ask the user to accept or reject the trajectory
         while True:
             response = input("Accept the trajectory? (y/n): ")
@@ -66,8 +99,8 @@ while status == "active":
             else:
                 print("Invalid input. Please enter 'y' or 'n'.")
 
-    except Exception as e:
-        print(logger.color_text("The trajectory is infeasible. Please try again.", 'yellow'))
+        #except Exception as e:
+        #    print(logger.color_text("The trajectory is infeasible. Please try again.", 'yellow'))
 
     previous_messages = messages
     
