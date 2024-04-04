@@ -18,9 +18,10 @@ class NL_to_STL:
         self.gpt = GPT()
 
     def get_specs(self, messages):
+        print("Extracting the specification...")
         response = messages[-1]['content']
-        specs = self.extract_specs(response)
-        return specs
+        spec = self.extract_spec(response)
+        return spec
 
     def gpt_conversation(self, max_inputs=10, previous_messages=[]):
         
@@ -62,7 +63,7 @@ class NL_to_STL:
         messages.append({"role": "user", "content": f'Original specification: {spec}'})
         response = self.gpt.chatcompletion(messages)
         print(logger.color_text("Syntax checker:", 'purple'), response)
-        new_spec = self.extract_specs(response)
+        new_spec = self.extract_spec(response)
         return new_spec
     
     def load_chatgpt_instructions(self, filename):
@@ -76,14 +77,13 @@ class NL_to_STL:
         instructions = instructions.replace("T_MAX", str(self.N))
         return instructions
     
-    def extract_specs(self, response):
-        specs = []
+    def extract_spec(self, response):
         start = 0
         while True:
             start = response.find("<", start)
             if start == -1:
                 break
             end = response.find(">", start)
-            specs.append(response[start+1:end])
-            start = end
-        return specs
+            spec = response[start+1:end]
+            start = end + 1
+        return spec
