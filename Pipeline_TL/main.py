@@ -7,8 +7,8 @@ from scenarios import *
 
 max_acc = 50                # maximum acceleration in m/s^2
 max_speed = 1               # maximum speed in m/s
-T = 30                      # time horizon in seconds 
-dt = 0.5                    # time step in seconds
+T = 25                      # time horizon in seconds 
+dt = 0.8                    # time step in seconds
 N = int(T/dt)               # total number of time steps
 
 print(logger.color_text(f"dt = {dt}s.", 'yellow'))
@@ -21,7 +21,7 @@ x0 = scenarios.get_starting_state(scenario)
 syntax_check_enabled = False
 animate_final_trajectory = False
 dynamicless_spec_check = True
-solver_verbose = True
+solver_verbose = False
 
 translator = NL_to_STL(objects, N, dt, print_instructions=True)
 
