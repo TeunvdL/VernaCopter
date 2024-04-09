@@ -82,8 +82,8 @@ class DummySystem:
         self.C = np.eye(real_system.C.shape[0])
         self.D = np.zeros_like(real_system.D)
 
-        self.A_tilde = np.eye(real_system.A.shape[0])+self.A*real_system.dt
-        self.B_tilde = self.B*real_system.dt
+        self.A_tilde = np.eye(real_system.A.shape[0])+self.A*self.dt
+        self.B_tilde = self.B*self.dt
 
     def getSystem(self):
         return LinearSystem(self.A_tilde, self.B_tilde, self.C, self.D)
@@ -93,39 +93,32 @@ class STLSolver:
     def __init__(self, spec, objects, x0 = np.zeros(6,), T=10):
         self.objects = objects
         self.spec = spec
-        print("self.spec check: ", self.spec)
         self.x0 = x0
         self.T = T
 
     def generate_trajectory(self, dt, max_acc, max_speed, verbose = False, include_dynamics=True):
-
         self.dt = dt
-
-        if include_dynamics:
-            self.max_acc = max_acc
-            self.max_speed = max_speed
-        else:
-            self.max_acc = 100
-            self.max_speed = 100
-            self.dt = 2
-
         self.verbose = verbose
+        self.max_acc = max_acc
+        self.max_speed = max_speed
         objects = self.objects
         N = int(self.T/self.dt)
 
-        if include_dynamics:
-            dynamics = drone_dynamics(dt=self.dt, max_acc=self.max_acc)
-        else:
-            dynamics = DummySystem(drone_dynamics(dt=self.dt, max_acc=self.max_acc))
+        dynamics = drone_dynamics(dt=self.dt, max_acc=max_acc)
 
-        sys = dynamics.getSystem()
+        if not include_dynamics:
+            self.max_acc = 100
+            self.max_speed = 100
+            dynamics = DummySystem(dynamics)
+            
+        sys = dynamics.getSystem()      
 
         Q = np.zeros((6,6))     # state cost   : penalize position error
         R = np.eye(3)           # control cost : penalize control effort
 
-        N = int(self.T/dynamics.dt)
+        N = int(self.T/self.dt)
         solver = GurobiMICPSolver(eval(self.spec), sys, self.x0, N, verbose=self.verbose)
-        print("spec: ", self.spec)
+        print("spec used in the solver: ", self.spec)
         solver.AddQuadraticCost(Q=Q, R=R)
         u_min = -dynamics.max_acc*np.ones(3,)  # minimum acceleration
         u_max = dynamics.max_acc*np.ones(3,)   # maximum acceleration
