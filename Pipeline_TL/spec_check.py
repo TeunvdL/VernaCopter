@@ -22,19 +22,25 @@ class Spec_checker:
             return None
 
 
-    def GPT_spec_check(self, objects, inside_objects_array):
+    def GPT_spec_check(self, objects, inside_objects_array, previous_messages):
         gpt = GPT()
         translator = NL_to_STL(objects, self.N, self.dt, print_instructions=True)
-        inside_objects_text = self.get_inside_objects_text(inside_objects_array)
-        messages = []
-        instructions_template = translator.load_chatgpt_instructions('spec_check_instructions.txt')
-        instructions = translator.insert_instruction_variables(instructions_template)
-        messages.append({"role": "system", "content": instructions})
-        messages.append({"role": "user", "content": inside_objects_text})
-        #print("messages", messages)
-        response = gpt.chatcompletion(messages)
-        messages.append({"role": "assistant", "content": f"Specification checker: {response}"})
+        messages=previous_messages[1:-1] # all previous messages except the instructions and final message
+    
+        instructions_template = translator.load_chatgpt_instructions('spec_check_instructions.txt') # load the instructions template
+        instructions = translator.insert_instruction_variables(instructions_template) # insert variables into the instructions template
+        messages.insert(0, {"role": "system", "content": instructions}) # insert the instructions at the beginning of the messages
+
+        inside_objects_text = self.get_inside_objects_text(inside_objects_array) # get text description of the inside objects array
+        messages.append({"role": "system", "content": inside_objects_text}) # append the inside objects text to the messages  
+
+        print("Instruction messages:", messages)
+        response = gpt.chatcompletion(messages) # get response from GPT
+
+        messages.append({"role": "assistant", "content": f"{response}"})
+
         print(logger.color_text("Specification checker:", 'purple'), response)
+
         return response
     
     def get_inside_objects_text(self, inside_objects_array):
@@ -46,11 +52,11 @@ class Spec_checker:
         output = ""
         for i, object in enumerate(self.objects.keys()):
             if np.all(inside_objects_array[i,:] == 1):
-                output += f"The drone is inside the {object} at all times.\n"
+                output += f"The drone is always inside the {object}.\n"
             elif np.all(inside_objects_array[i,:] == 0):
-                output += f"The drone is outside the {object} at all times.\n"
+                output += f"The drone is never inside the {object}.\n"
             else:
-                output += f"The drone passes through the {object} at some point during the time window, but not at all times.\n"
+                output += f"The drone is inside the {object} at some point, but not always.\n"
         return output
 
     def visualize_spec(self, inside_objects_array):
