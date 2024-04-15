@@ -140,3 +140,5 @@ cython_debug/
 simple_pipeline/__pycache__/ChatGPT_move_to.cpython-39.pyc
 ChatGPT_key.txt
 iteun_key.txt
+*.npy
+*.csv
