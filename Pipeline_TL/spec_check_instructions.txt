@@ -10,7 +10,6 @@ These objects and regions are the following:
 OBJECTS
 
 The next several messages are the interaction between the LLM and the user. In these messages, the user describes the task in detail.
-In the last (user) message, you will be informed which regions the drone passes through throughout the trajectory.
 
 Your task:
 1. List the requirements from the user instructions.
