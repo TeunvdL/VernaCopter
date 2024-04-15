@@ -40,7 +40,7 @@ class NL_to_STL:
             messages.append({"role": "assistant", "content": response})
             print(logger.color_text("Assistant:", 'cyan'), response)
         else:
-            print("Please specify the task. Type 'quit' to exit conversation.")
+            print("Please specify the task. Type 'quit' to exit conversation and generate the final trajectory.")
             for _ in range(max_inputs):
                 user_input = input(logger.color_text("User: ", 'orange'))
 
