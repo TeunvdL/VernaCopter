@@ -10,30 +10,38 @@ from pid_edited_pipeline import run
 # Parameters
 max_acc = 10                            # maximum acceleration in m/s^2
 max_speed = 0.5                         # maximum speed in m/s
-T = 25                                  # time horizon in seconds 
-dt = 0.5                                # time step in seconds
-N = int(T/dt)                           # total number of time steps
-scenario = "treasure_hunt"              # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+T_initial = 50                          # Initial time horizon in seconds 
+dt = 0.7                                # time step in seconds
+scenario_name = "treasure_hunt"         # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
 
-# Flags
+# System flags
 syntax_checker_enabled = False          # Enable syntax check for the trajectory
-animate_final_trajectory = True         # Animate the final trajectory
-dynamicless_check = False               # Enable dynamicless specification check
-solver_verbose = False                  # Enable solver verbose
 spec_checker_enabled = False            # Enable specification check
+dynamicless_check_enabled = False       # Enable dynamicless specification check
 manual_spec_check_enabled = True        # Enable manual specification check
 manual_trajectory_check_enabled = True  # Enable manual trajectory check
+
+# Visualization flags
+animate_final_trajectory = True         # Animate the final trajectory
+visualize_scenario = True               # Visualize the scenario
+
+# Logging flags
+solver_verbose = False                  # Enable solver verbose
+print_ChatGPT_instructions = False      # Print ChatGPT instructions
 
 # Loop iteration limits
 syntax_check_limit = 5                  # Maximum number of syntax check iterations
 spec_check_limit = 5                    # Maximum number of specification check iterations
 
 # Set up scenario
-scenarios = Scenarios()
-objects = scenarios.get_objects(scenario)
-x0 = scenarios.get_starting_state(scenario)
+scenario = Scenarios(scenario_name)
+objects = scenario.objects
+x0 = scenario.starting_state
+if visualize_scenario: scenario.visualize_scenario()
 
 # Initializations
+T = T_initial                           # Initialize the time horizon
+N = int(T/dt)                           # total number of time steps
 previous_messages = []                  # Initialize the conversation
 status = "active"                       # Initialize the status of the conversation
 all_x = np.expand_dims(x0, axis=1)      # Initialize the full trajectory
@@ -44,7 +52,7 @@ syntax_checked_spec = None              # Initialize the syntax checked specific
 spec_checker_iteration = 0              # Initialize the specification check iteration
 syntax_checker_iteration = 0            # Initialize the syntax check iteration
 
-translator = NL_to_STL(objects, N, dt, print_instructions=True)
+translator = NL_to_STL(objects, N, dt, print_instructions=print_ChatGPT_instructions)
 
 ### Main loop ###
 while status == "active":
@@ -57,11 +65,12 @@ while status == "active":
         spec = translator.get_specs(messages)
     else:
         spec = syntax_checked_spec
-    print("Extracted spec: ", spec)
+        syntax_checked_spec = None
+    print("Extracted specification: ", spec)
 
     solver = STLSolver(spec, objects, x0, T)
 
-    if dynamicless_check and not spec_accepted: # Check the specification without dynamics
+    if dynamicless_check_enabled and not spec_accepted: # Check the specification without dynamics
         print(logger.color_text("Checking the specification without dynamics...", 'yellow'))
         try:
             no_dynamics_x, no_dynamics_u = solver.generate_trajectory(dt, max_acc, max_speed, verbose=solver_verbose, include_dynamics=False)
@@ -89,6 +98,7 @@ while status == "active":
                     if response.lower() == 'y':
                         print(logger.color_text("The specification is accepted.", 'yellow'))
                         spec_accepted = True
+                        processing_feedback = False
                         break
                     elif response.lower() == 'n':
                         print(logger.color_text("The specification is rejected.", 'yellow'))
@@ -107,7 +117,7 @@ while status == "active":
                 syntax_checked_spec = translator.gpt_syntax_checker(spec)
                 syntax_checker_iteration += 1
 
-    if not dynamicless_check or spec_accepted:
+    if not dynamicless_check_enabled or spec_accepted:
         print(logger.color_text("Generating the trajectory...", 'yellow'))
         try:
             x,u = solver.generate_trajectory(dt, max_acc, max_speed, verbose=solver_verbose, include_dynamics=True)
@@ -129,7 +139,7 @@ while status == "active":
                 spec_checker_iteration += 1
 
             if np.isnan(x).all():
-                print(logger.color_text("The trajectory is infeasible.", 'yellow'))
+                raise Exception("The trajectory is infeasible.")
         
             if manual_trajectory_check_enabled:
                 # Ask the user to accept or reject the trajectory
@@ -139,7 +149,9 @@ while status == "active":
                         print(logger.color_text("The trajectory is accepted.", 'yellow'))
                         all_x = np.hstack((all_x, x[:,1:]))
                         x0 = x[:, -1]
-                        print("x0: ", x0)
+                        print("Current position: ", x0)
+                        processing_feedback = False
+                        # reset the flags
                         spec_accepted = False
                         trajectory_accepted = False
                         break  # Exit the loop since the trajectory is accepted
