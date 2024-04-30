@@ -1,17 +1,24 @@
 import numpy as np
+from PIL import Image
 
 class Scenarios:
-    def get_starting_state(self, scenario_name):
-        if scenario_name == "reach_avoid":
+
+    def __init__(self, scenario_name):
+        self.scenario_name = scenario_name
+        self.objects = self.get_objects()
+        self.starting_state = self.get_starting_state()
+
+    def get_starting_state(self):
+        if self.scenario_name == "reach_avoid":
             x0 = np.array([-3.5,-3.5,0.5,0.,0.,0.])
-        elif scenario_name == "narrow_maze":
+        elif self.scenario_name == "narrow_maze":
             x0 = np.array([4.25,-4.25,0.5,0.,0.,0.])
-        elif scenario_name == "treasure_hunt":
+        elif self.scenario_name == "treasure_hunt":
             x0 = np.array([3.,-4.,0.5,0.,0.,0.])
         return x0
     
-    def get_objects(self, scenario_name):
-        if scenario_name == "reach_avoid":
+    def get_objects(self):
+        if self.scenario_name == "reach_avoid":
             objects = {"goal": (4., 5., 4., 5., 4., 5.),
                        "obstacle1": (-3., -1., 1.5, -0.5, 0.5, 2.5),
                        "obstacle2": (-4.5, -3., 0., 2.25, 0.5, 2.),
@@ -21,7 +28,7 @@ class Scenarios:
                        "obstacle6": (2., 3.5, 1.5, 2.5, 3.75, 5.),
                        }
 
-        elif scenario_name == "narrow_maze":
+        elif self.scenario_name == "narrow_maze":
             objects = {"goal1": (-0.25, 0.75, -0.25, 0.75, 1., 2.),
                        "goal2": (-2.75, -1.75, 1.75, 2.75, 1., 2.),
                        "goal3": (1.75, 2.75, 1.75, 2.75, 1., 2.),
@@ -42,7 +49,7 @@ class Scenarios:
                        "NE_vertical_wall": (3., 3.5, 1., 3.5, 0., 3.),
                        }
 
-        elif scenario_name == "treasure_hunt":
+        elif self.scenario_name == "treasure_hunt":
             objects = {"door_key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
                        "chest": (-4.25, -3, -4.5, -3.75, 0., 0.75),
                        "door": (0., 0.5, -2.5, -1, 0., 2.5),
@@ -55,3 +62,15 @@ class Scenarios:
                        }
 
         return objects
+    
+    def visualize_scenario(self):
+        # show png of scenario
+        path = 'Pipeline_TL/scenario_images/'
+        if self.scenario_name == "reach_avoid":
+            path += "reach_avoid.png"
+        elif self.scenario_name == "narrow_maze":
+            path += "narrow_maze.png"
+        elif self.scenario_name == "treasure_hunt":
+            path += "treasure_hunt.png"
+        img = Image.open(path)
+        img.show()

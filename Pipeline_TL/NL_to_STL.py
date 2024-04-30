@@ -18,11 +18,12 @@ class NL_to_STL:
         self.gpt = GPT()
 
     def get_specs(self, messages):
+        print("Extracting the specification...")
         response = messages[-1]['content']
-        specs = self.extract_specs(response)
-        return specs
+        spec = self.extract_spec(response)
+        return spec
 
-    def gpt_conversation(self, max_inputs=10, previous_messages=[]):
+    def gpt_conversation(self, max_inputs=10, previous_messages=[], processing_feedback=False, status="active"):
         
         if not previous_messages:
             instructions_template = self.load_chatgpt_instructions('ChatGPT_instructions.txt')
@@ -33,25 +34,30 @@ class NL_to_STL:
         else:
             messages = previous_messages   
 
-        print("Please specify the task. Type 'quit' to exit conversation.")
-        status = "active"
-        for _ in range(max_inputs):
-            user_input = input(logger.color_text("User: ", 'orange'))
-
-            if user_input.lower() == 'quit':
-                print(logger.color_text("Exited conversation", 'yellow'))
-                status = "exited"
-                break
-
-            messages.append({"role": "user", "content": user_input})
+        if processing_feedback:
+            print(logger.color_text("Processing feedback...", 'yellow'))
             response = self.gpt.chatcompletion(messages)
             messages.append({"role": "assistant", "content": response})
             print(logger.color_text("Assistant:", 'cyan'), response)
+        else:
+            print("Please specify the task. Type 'quit' to exit conversation and generate the final trajectory.")
+            for _ in range(max_inputs):
+                user_input = input(logger.color_text("User: ", 'orange'))
 
-            # check if < or > symbol is present in the response and exit conversation if detected
-            if '<' in response:
-                print("The specification was generated.")
-                break
+                if user_input.lower() == 'quit':
+                    print(logger.color_text("Exited conversation", 'yellow'))
+                    status = "exited"
+                    break
+
+                messages.append({"role": "user", "content": user_input})
+                response = self.gpt.chatcompletion(messages)
+                messages.append({"role": "assistant", "content": response})
+                print(logger.color_text("Assistant:", 'cyan'), response)
+
+                # check if < or > symbol is present in the response and exit conversation if detected
+                if '<' in response:
+                    print("The specification was generated.")
+                    break
     
         return messages, status
     
@@ -62,7 +68,7 @@ class NL_to_STL:
         messages.append({"role": "user", "content": f'Original specification: {spec}'})
         response = self.gpt.chatcompletion(messages)
         print(logger.color_text("Syntax checker:", 'purple'), response)
-        new_spec = self.extract_specs(response)
+        new_spec = self.extract_spec(response)
         return new_spec
     
     def load_chatgpt_instructions(self, filename):
@@ -72,18 +78,23 @@ class NL_to_STL:
         return instructions
     
     def insert_instruction_variables(self, instructions):
-        instructions = instructions.replace("OBJECTS", str(self.objects))
-        instructions = instructions.replace("T_MAX", str(self.N))
+        try:
+            instructions = instructions.replace("OBJECTS", str(self.objects))
+        except:
+            pass
+        try:
+            instructions = instructions.replace("T_MAX", str(self.N))
+        except:
+            pass
         return instructions
     
-    def extract_specs(self, response):
-        specs = []
+    def extract_spec(self, response):
         start = 0
         while True:
             start = response.find("<", start)
             if start == -1:
                 break
             end = response.find(">", start)
-            specs.append(response[start+1:end])
-            start = end
-        return specs
+            spec = response[start+1:end]
+            start = end + 1
+        return spec
