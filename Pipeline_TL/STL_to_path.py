@@ -118,7 +118,6 @@ class STLSolver:
 
         N = int(self.T/self.dt)
         solver = GurobiMICPSolver(eval(self.spec), sys, self.x0, N, verbose=self.verbose)
-        print("spec used in the solver: ", self.spec)
         solver.AddQuadraticCost(Q=Q, R=R)
         u_min = -dynamics.max_acc*np.ones(3,)  # minimum acceleration
         u_max = dynamics.max_acc*np.ones(3,)   # maximum acceleration
