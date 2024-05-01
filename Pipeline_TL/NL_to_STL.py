@@ -10,12 +10,12 @@ class NL_to_STL:
 
     """
 
-    def __init__(self, objects, N, dt, print_instructions=False):
+    def __init__(self, objects, N, dt, print_instructions=False, GPT_model="gpt-3.5-turbo"):
         self.objects = objects
         self.dt = dt
         self.N = N
         self.print_instructions = print_instructions
-        self.gpt = GPT()
+        self.gpt = GPT(GPT_model)
 
     def get_specs(self, messages):
         print("Extracting the specification...")
