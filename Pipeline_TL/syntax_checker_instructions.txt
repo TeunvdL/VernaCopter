@@ -57,6 +57,4 @@ Example 5 - time horizon not set correctly:
 Example 6 - good specification, nothing should be changed except the time horizon:
     Original specification: STL_formulas.inside_cuboid(objects["goal"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle1"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle2"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle3"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle4"]).always(0, 25)
     Desirable response: The specification looks good as it is.
-    <STL_formulas.inside_cuboid(objects["goal"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle1"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle2"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle3"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle4"]).always(0, 25)>
-
-Example 7 - complicating example with multiple errors
+    <STL_formulas.inside_cuboid(objects["goal"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle1"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle2"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle3"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle4"]).always(0, T_MAX)>
