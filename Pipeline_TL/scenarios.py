@@ -63,7 +63,7 @@ class Scenarios:
 
         return objects
     
-    def visualize_scenario(self):
+    def show_map(self):
         # show png of scenario
         path = 'Pipeline_TL/scenario_images/'
         if self.scenario_name == "reach_avoid":
