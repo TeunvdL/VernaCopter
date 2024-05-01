@@ -80,6 +80,59 @@ class Spec_checker:
             ax.axvline(i, color='gray', linewidth=0.5)
 
         return fig, ax
+    
+    def task_accomplished_check(self, inside_objects_array, scenario_name):
+        objects_inside = {}
+        for i, object in enumerate(self.objects.keys()):
+            objects_inside[object] = inside_objects_array[i,:]
+        objects_inside
+
+        if scenario_name == "reach_avoid":
+            pass
+        elif scenario_name == "narrow_maze":
+            pass
+        elif scenario_name == "treasure_hunt":
+            # test if chest is reached
+            chest_reached = 1 in objects_inside['chest']
+            
+            # test if all the walls are avoided
+            walls_avoided = True
+            for object in self.objects.keys():
+                if 'wall' in object:
+                    wall_crossed = 1 in objects_inside[object]
+                    if wall_crossed: walls_avoided = False
+
+            # test if the door is crossed before the key is reached
+            key_time = np.where(objects_inside['door_key'] == 1)[0]
+            if key_time.size != 0:
+                key_crossed = True
+                key_time = key_time[0]
+            else: 
+                key_crossed = False
+
+            door_time = np.where(objects_inside['door'] == 1)[0]
+            if door_time.size != 0:
+                door_crossed = True
+                door_time = door_time[0]
+            else:
+                door_crossed = False
+
+            door_before_key = door_crossed and key_crossed and door_time < key_time
+
+            task_accomplished = False
+            if chest_reached and walls_avoided and not door_before_key:
+                print(logger.color_text("Task accomplished:", 'green'), "All conditions are met.")
+                task_accomplished = True
+            elif not chest_reached:
+                print(logger.color_text("Task failed:", 'red'), "The chest was not reached.")
+            elif not walls_avoided:
+                print(logger.color_text("Task failed:", 'red'), "A wall was crossed.")
+            elif door_before_key:
+                print(logger.color_text("Task failed:", 'red'), "The door was crossed before the key was reached.")
+            else:
+                print(logger.color_text("Task failed:", 'red'), "Unknown failure.")
+
+            return task_accomplished
 
     def get_inside_objects_array(self):
         T = self.x.shape[1]
