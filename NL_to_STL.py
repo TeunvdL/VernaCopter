@@ -72,7 +72,9 @@ class NL_to_STL:
         return new_spec
     
     def load_chatgpt_instructions(self, filename):
-        path = os.path.dirname(os.path.abspath(__file__))
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        folder = 'instructions'
+        path = current_path + '/' + folder
         instructions_file = open(path + '/' + filename, 'r')
         instructions = instructions_file.read()
         return instructions
