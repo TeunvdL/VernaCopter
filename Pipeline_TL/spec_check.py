@@ -88,9 +88,32 @@ class Spec_checker:
         objects_inside
 
         if scenario_name == "reach_avoid":
-            pass
+            # test if goal is reached
+            goal_reached = 1 in objects_inside['goal']
+
+            # test if any obstacle is crossed
+            obstacles_avoided = True
+            for object in self.objects.keys():
+                if 'obstacle' in object:
+                    obstacle_crossed = 1 in objects_inside[object]
+                    if obstacle_crossed: objects_avoided = False
+
+            task_accomplished = False
+            if goal_reached and obstacles_avoided:
+                print(logger.color_text("Task accomplished:", 'green'), "All conditions are met.")
+                task_accomplished = True
+            elif not goal_reached:
+                print(logger.color_text("Task failed:", 'red'), "The goal was not reached.")
+            elif not obstacles_avoided:
+                print(logger.color_text("Task failed:", 'red'), "An obstacle was crossed.")
+            else:
+                print(logger.color_text("Task failed:", 'red'), "Unknown failure.")
+                
+            return task_accomplished
+        
         elif scenario_name == "narrow_maze":
             pass
+        
         elif scenario_name == "treasure_hunt":
             # test if chest is reached
             chest_reached = 1 in objects_inside['chest']
