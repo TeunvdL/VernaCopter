@@ -1,7 +1,7 @@
 from GPT import *
 from STL_to_path import *
 import os
-from logger import *
+from logger import color_text
 
 class NL_to_STL:
     """
@@ -34,24 +34,24 @@ class NL_to_STL:
             messages = previous_messages   
 
         if processing_feedback:
-            print(logger.color_text("Processing feedback...", 'yellow'))
+            print(color_text("Processing feedback...", 'yellow'))
             response = self.gpt.chatcompletion(messages)
             messages.append({"role": "assistant", "content": response})
-            print(logger.color_text("Assistant:", 'cyan'), response)
+            print(color_text("Assistant:", 'cyan'), response)
         else:
             print("Please specify the task. Type 'quit' to exit conversation and generate the final trajectory.")
             for _ in range(max_inputs):
-                user_input = input(logger.color_text("User: ", 'orange'))
+                user_input = input(color_text("User: ", 'orange'))
 
                 if user_input.lower() == 'quit':
-                    print(logger.color_text("Exited conversation", 'yellow'))
+                    print(color_text("Exited conversation", 'yellow'))
                     status = "exited"
                     break
 
                 messages.append({"role": "user", "content": user_input})
                 response = self.gpt.chatcompletion(messages)
                 messages.append({"role": "assistant", "content": response})
-                print(logger.color_text("Assistant:", 'cyan'), response)
+                print(color_text("Assistant:", 'cyan'), response)
 
                 # check if < or > symbol is present in the response and exit conversation if detected
                 if '<' in response:
@@ -66,7 +66,7 @@ class NL_to_STL:
         messages = [{"role": "system", "content": instructions}]
         messages.append({"role": "user", "content": f'Original specification: {spec}'})
         response = self.gpt.chatcompletion(messages)
-        print(logger.color_text("Syntax checker:", 'purple'), response)
+        print(color_text("Syntax checker:", 'purple'), response)
         new_spec = self.extract_spec(response)
         return new_spec
     
