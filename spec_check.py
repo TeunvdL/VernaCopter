@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from GPT import GPT
 from NL_to_STL import NL_to_STL
-from logger import *
+from logger import color_text
 
 class Spec_checker:
     def __init__(self, objects, x, N, dt):
@@ -39,7 +39,7 @@ class Spec_checker:
 
         messages.append({"role": "assistant", "content": f"{response}"})
 
-        print(logger.color_text("Specification checker:", 'purple'), response)
+        print(color_text("Specification checker:", 'purple'), response)
 
         return response
     
@@ -100,14 +100,14 @@ class Spec_checker:
 
             task_accomplished = False
             if goal_reached and obstacles_avoided:
-                print(logger.color_text("Task accomplished:", 'green'), "All conditions are met.")
+                print(color_text("Task accomplished:", 'green'), "All conditions are met.")
                 task_accomplished = True
             elif not goal_reached:
-                print(logger.color_text("Task failed:", 'red'), "The goal was not reached.")
+                print(color_text("Task failed:", 'red'), "The goal was not reached.")
             elif not obstacles_avoided:
-                print(logger.color_text("Task failed:", 'red'), "An obstacle was crossed.")
+                print(color_text("Task failed:", 'red'), "An obstacle was crossed.")
             else:
-                print(logger.color_text("Task failed:", 'red'), "Unknown failure.")
+                print(color_text("Task failed:", 'red'), "Unknown failure.")
                 
             return task_accomplished
         
@@ -144,16 +144,16 @@ class Spec_checker:
 
             task_accomplished = False
             if chest_reached and walls_avoided and not door_before_key:
-                print(logger.color_text("Task accomplished:", 'green'), "All conditions are met.")
+                print(color_text("Task accomplished:", 'green'), "All conditions are met.")
                 task_accomplished = True
             elif not chest_reached:
-                print(logger.color_text("Task failed:", 'red'), "The chest was not reached.")
+                print(color_text("Task failed:", 'red'), "The chest was not reached.")
             elif not walls_avoided:
-                print(logger.color_text("Task failed:", 'red'), "A wall was crossed.")
+                print(color_text("Task failed:", 'red'), "A wall was crossed.")
             elif door_before_key:
-                print(logger.color_text("Task failed:", 'red'), "The door was crossed before the key was reached.")
+                print(color_text("Task failed:", 'red'), "The door was crossed before the key was reached.")
             else:
-                print(logger.color_text("Task failed:", 'red'), "Unknown failure.")
+                print(color_text("Task failed:", 'red'), "Unknown failure.")
 
             return task_accomplished
 
