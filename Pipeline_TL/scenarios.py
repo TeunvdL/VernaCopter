@@ -7,6 +7,7 @@ class Scenarios:
         self.scenario_name = scenario_name
         self.objects = self.get_objects()
         self.starting_state = self.get_starting_state()
+        self.T = self.get_time_horizon()
 
     def get_starting_state(self):
         if self.scenario_name == "reach_avoid":
@@ -20,12 +21,13 @@ class Scenarios:
     def get_objects(self):
         if self.scenario_name == "reach_avoid":
             objects = {"goal": (4., 5., 4., 5., 4., 5.),
-                       "obstacle1": (-3., -1., 1.5, -0.5, 0.5, 2.5),
+                       "obstacle1": (-3., -1., -0.5, 1.5, 0.5, 2.5),
                        "obstacle2": (-4.5, -3., 0., 2.25, 0.5, 2.),
                        "obstacle3": (-2., -1., 4., 5., 3.5, 4.5),
                        "obstacle4": (3., 4., -3.5, -2.5, 1., 2.),
                        "obstacle5": (4., 5., 0., 1., 2., 3.5),
                        "obstacle6": (2., 3.5, 1.5, 2.5, 3.75, 5.),
+                       "obstacle7": (-2., -1., -2., -1., 1., 2.),
                        }
 
         elif self.scenario_name == "narrow_maze":
@@ -74,3 +76,12 @@ class Scenarios:
             path += "treasure_hunt.png"
         img = Image.open(path)
         img.show()
+
+    def get_time_horizon(self):
+        if self.scenario_name == "reach_avoid":
+            T = 25
+        elif self.scenario_name == "narrow_maze":
+            T = 50
+        elif self.scenario_name == "treasure_hunt":
+            T = 50
+        return T
