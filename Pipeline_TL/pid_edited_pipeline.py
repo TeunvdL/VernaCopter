@@ -204,8 +204,8 @@ def run(waypoints,          # waypoints to follow, shape (N, 3)
     env.close()
 
     #### Save the simulation results ###########################
-    logger.save()
-    logger.save_as_csv("pid") # Optional CSV save
+    # logger.save()
+    # logger.save_as_csv("pid") # Optional CSV save
 
     #### Plot the simulation results ###########################
     if plot:
