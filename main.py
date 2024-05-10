@@ -5,31 +5,31 @@ from visualization import *
 from logger import color_text
 from scenarios import *
 from spec_check import *
-from simulation.pid_edited_pipeline import run
-from setup import setup_parameters
+from setup import parameters
 from experiments.save_results import save_results
+from simulation.simulation import simulate
 
-pars = setup_parameters()
+pars = parameters() # Get the parameters
 
 # Set up scenario
-scenario = Scenarios(pars.scenario_name)
-objects = scenario.objects
-x0 = scenario.starting_state
-if pars.show_map: scenario.show_map()
-pars.T_initial = scenario.get_time_horizon()
+scenario = Scenarios(pars.scenario_name)    # Set up the scenario
+objects = scenario.objects                  # Get the objects in the scenario
+x0 = scenario.x0                            # Get the starting state of the scenario
+if pars.show_map: scenario.show_map()       # Show the map if the flag is set
+pars.T_initial = scenario.T                 # Get the time horizon of the scenario
 
 # Initializations
-T = pars.T_initial                      # Initial time horizon in seconds
-N = int(T/pars.dt)                      # total number of time steps
-previous_messages = []                  # Initialize the conversation
-status = "active"                       # Initialize the status of the conversation
-all_x = np.expand_dims(x0, axis=1)      # Initialize the full trajectory
-processing_feedback = False             # Initialize the feedback processing flag
-spec_accepted = False                   # Initialize the specification acceptance flag
-trajectory_accepted = False             # Initialize the trajectory acceptance flag
-syntax_checked_spec = None              # Initialize the syntax checked specification
-spec_checker_iteration = 0              # Initialize the specification check iteration
-syntax_checker_iteration = 0            # Initialize the syntax check iteration
+T = pars.T_initial                          # Initial time horizon in seconds
+N = int(T/pars.dt)                          # total number of time steps
+previous_messages = []                      # Initialize the conversation
+status = "active"                           # Initialize the status of the conversation
+all_x = np.expand_dims(x0, axis=1)          # Initialize the full trajectory
+processing_feedback = False                 # Initialize the feedback processing flag
+spec_accepted = False                       # Initialize the specification acceptance flag
+trajectory_accepted = False                 # Initialize the trajectory acceptance flag
+syntax_checked_spec = None                  # Initialize the syntax checked specification
+spec_checker_iteration = 0                  # Initialize the specification check iteration
+syntax_checker_iteration = 0                # Initialize the syntax check iteration
 
 translator = NL_to_STL(objects, N, pars.dt, print_instructions=pars.print_ChatGPT_instructions, GPT_model = pars.GPT_model)
 
@@ -158,35 +158,7 @@ if all_x.shape[1] == 1:
     print(color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
 else:
     print(color_text("The full trajectory is generated.", 'yellow'))
-    if pars.animate_final_trajectory:
-        try:
-            waypoints = all_x[:3].T
-            N_waypoints = waypoints.shape[0]
-            N_extra_points = 5 # extra waypoints to add between waypoints linearly
-
-            # Add extra waypoints
-            total_points = N_waypoints + (N_waypoints-1)*N_extra_points
-            TARGET_POS = np.zeros((total_points,3))
-            TARGET_POS[0] = waypoints[0]
-            for i in range(N_waypoints-1):
-                TARGET_POS[(1+N_extra_points)*i] = waypoints[i]
-                for j in range(N_extra_points+1):
-                    k = (j+1)/(N_extra_points+1)
-                    TARGET_POS[(1+N_extra_points)*i + j] = (1-k)*waypoints[i] + k*waypoints[i+1]
-
-            INIT_RPYS = np.array([[0, 0, 0]])
-
-            # start simulation when the user presses enter
-            input("Press Enter to start the simulation.")
-
-            run(waypoints=TARGET_POS, 
-            initial_rpys=INIT_RPYS,    
-            objects=objects,
-            duration_sec=T-10)
-
-        except:
-            print(color_text("Failed to animate the final trajectory.", 'yellow'))
-            pass
+    simulate(pars, objects, all_x, T) # Animate the final trajectory
 
 spec_checker = Spec_checker(objects, all_x, N, pars.dt)
 inside_objects_array = spec_checker.get_inside_objects_array()
