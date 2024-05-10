@@ -19,9 +19,6 @@ import os
 import time
 import argparse
 from datetime import datetime
-import pdb
-import math
-import random
 import numpy as np
 import pybullet as p
 import pybullet_data
