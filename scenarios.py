@@ -2,11 +2,10 @@ import numpy as np
 from PIL import Image
 
 class Scenarios:
-
     def __init__(self, scenario_name):
         self.scenario_name = scenario_name
         self.objects = self.get_objects()
-        self.starting_state = self.get_starting_state()
+        self.x0 = self.get_starting_state()
         self.T = self.get_time_horizon()
 
     def get_starting_state(self):

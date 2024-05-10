@@ -1,4 +1,4 @@
-class setup_parameters:
+class parameters:
     def __init__(self):
         # Parameters
         self.max_acc = 10                            # maximum acceleration in m/s^2
