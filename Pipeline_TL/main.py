@@ -6,13 +6,14 @@ from logger import *
 from scenarios import *
 from spec_check import *
 from pid_edited_pipeline import run
+import json
 
 # Parameters
 max_acc = 10                            # maximum acceleration in m/s^2
-max_speed = 0.5                         # maximum speed in m/s
-T_initial = 50                          # Initial time horizon in seconds 
+max_speed = 0.5                         # maximum speed in m/s 
 dt = 0.7                                # time step in seconds
-scenario_name = "treasure_hunt"         # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+scenario_name = "reach_avoid"           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+GPT_model = "gpt-3.5-turbo"             # GPT version: "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", etc.
 
 # System flags
 syntax_checker_enabled = False          # Enable syntax check for the trajectory
@@ -23,7 +24,7 @@ manual_trajectory_check_enabled = True  # Enable manual trajectory check
 
 # Visualization flags
 animate_final_trajectory = True         # Animate the final trajectory
-visualize_scenario = True               # Visualize the scenario
+show_map = False                        # Show a map of the scenario at the start of the program
 
 # Logging flags
 solver_verbose = False                  # Enable solver verbose
@@ -37,7 +38,8 @@ spec_check_limit = 5                    # Maximum number of specification check 
 scenario = Scenarios(scenario_name)
 objects = scenario.objects
 x0 = scenario.starting_state
-if visualize_scenario: scenario.visualize_scenario()
+if show_map: scenario.show_map()
+T_initial = scenario.get_time_horizon() # Initial time horizon in seconds
 
 # Initializations
 T = T_initial                           # Initialize the time horizon
@@ -52,7 +54,7 @@ syntax_checked_spec = None              # Initialize the syntax checked specific
 spec_checker_iteration = 0              # Initialize the specification check iteration
 syntax_checker_iteration = 0            # Initialize the syntax check iteration
 
-translator = NL_to_STL(objects, N, dt, print_instructions=print_ChatGPT_instructions)
+translator = NL_to_STL(objects, N, dt, print_instructions=print_ChatGPT_instructions, GPT_model = GPT_model)
 
 ### Main loop ###
 while status == "active":
@@ -179,30 +181,102 @@ if all_x.shape[1] == 1:
     print(logger.color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
 else:
     print(logger.color_text("The full trajectory is generated.", 'yellow'))
-    visualizer = Visualizer(all_x, objects, animate=animate_final_trajectory)
-    visualizer.visualize_trajectory()
-    visualizer.plot_distance_to_objects()
-    plt.pause(1)
-
     if animate_final_trajectory:
-        waypoints = all_x[:3].T
-        N_waypoints = waypoints.shape[0]
-        N_extra_points = 5 # extra waypoints to add between waypoints linearly
+        try:
+            waypoints = all_x[:3].T
+            N_waypoints = waypoints.shape[0]
+            N_extra_points = 5 # extra waypoints to add between waypoints linearly
 
-        # Add extra waypoints
-        total_points = N_waypoints + (N_waypoints-1)*N_extra_points
-        TARGET_POS = np.zeros((total_points,3))
-        TARGET_POS[0] = waypoints[0]
-        for i in range(N_waypoints-1):
-            TARGET_POS[(1+N_extra_points)*i] = waypoints[i]
-            for j in range(N_extra_points+1):
-                k = (j+1)/(N_extra_points+1)
-                TARGET_POS[(1+N_extra_points)*i + j] = (1-k)*waypoints[i] + k*waypoints[i+1]
+            # Add extra waypoints
+            total_points = N_waypoints + (N_waypoints-1)*N_extra_points
+            TARGET_POS = np.zeros((total_points,3))
+            TARGET_POS[0] = waypoints[0]
+            for i in range(N_waypoints-1):
+                TARGET_POS[(1+N_extra_points)*i] = waypoints[i]
+                for j in range(N_extra_points+1):
+                    k = (j+1)/(N_extra_points+1)
+                    TARGET_POS[(1+N_extra_points)*i + j] = (1-k)*waypoints[i] + k*waypoints[i+1]
 
-        INIT_RPYS = np.array([[0, 0, 0]])
+            INIT_RPYS = np.array([[0, 0, 0]])
 
-        run(waypoints=TARGET_POS, 
-        initial_rpys=INIT_RPYS,    
-        objects=objects,
-        duration_sec=T,
-)
+            # start simulation when the user presses enter
+            input("Press Enter to start the simulation.")
+
+            run(waypoints=TARGET_POS, 
+            initial_rpys=INIT_RPYS,    
+            objects=objects,
+            duration_sec=T-10)
+
+        except:
+            print(logger.color_text("Failed to animate the final trajectory.", 'yellow'))
+            pass
+
+spec_checker = Spec_checker(objects, all_x, N, dt)
+inside_objects_array = spec_checker.get_inside_objects_array()
+task_accomplished = spec_checker.task_accomplished_check(inside_objects_array, scenario_name)
+
+while True:
+    response = input("Save the results? (y/n): ")
+    if response.lower() == 'y':
+        print(logger.color_text("Saving the results...", 'yellow'))
+        
+        parent_directory = os.path.dirname(os.path.abspath(__file__))
+        experiments_directory = parent_directory + f'/experiments/{scenario_name}/'
+
+        if not os.path.exists(experiments_directory):
+            os.makedirs(experiments_directory)
+
+        # check the highest experiment id in the folder and increment by 1
+        experiment_id = 0
+        for file in os.listdir(experiments_directory):
+            if file.endswith(".json"):
+                filename = file.split('.')[0] # remove the extension '.json'
+                experiment_id = max(experiment_id, int(filename.split('_')[0])) # extract the experiment id from the filename '1_messages' -> 1
+        experiment_id += 1
+
+        messages_file_name = f'{experiment_id}_messages.json'
+        messages_file_path = os.path.join(experiments_directory, messages_file_name)
+
+        with open(messages_file_path, 'w') as f:
+            json.dump(messages, f)
+
+
+        ### Generate metadata file ###
+
+        # find and count number of user messages
+        user_message_count = 0
+        for message in messages:
+            if message['role'] == 'user':
+                user_message_count += 1
+
+        metadata = {
+            "scenario_name": scenario_name,
+            "task_accomplished": task_accomplished,
+            "user_message_count": user_message_count,
+            "GPT_version": GPT_model,
+            "syntax_checker_enabled": syntax_checker_enabled,
+            "spec_checker_enabled": spec_checker_enabled,
+            "dynamicless_check_enabled": dynamicless_check_enabled,
+            "manual_spec_check_enabled": manual_spec_check_enabled,
+            "manual_trajectory_check_enabled": manual_trajectory_check_enabled,
+            "syntax_check_limit": syntax_check_limit,
+            "spec_check_limit": spec_check_limit,
+            "max_acc": max_acc,
+            "max_speed": max_speed,
+            "T_initial": T_initial,
+            "dt": dt,
+        }
+
+        metadata_file_name = f'{experiment_id}_METADATA.json'
+        metadata_file_path = os.path.join(experiments_directory, metadata_file_name)
+
+        with open(metadata_file_path, 'w') as f:
+            json.dump(metadata, f)
+
+        break  # Exit the loop since the results are saved
+    elif response.lower() == 'n':
+        break  # Exit the loop since the results are not saved
+    else:
+        print("Invalid input. Please enter 'y' or 'n'.")
+
+print(logger.color_text("The program is completed.", 'yellow'))

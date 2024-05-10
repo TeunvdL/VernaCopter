@@ -5,10 +5,11 @@ class GPT:
     Class for ChatGPT interaction.
     
     """
-    def __init__(self):
+    def __init__(self, model="gpt-3.5-turbo"):
         self.client = OpenAI()
+        self.model = model
 
-    def chatcompletion(self, messages, model="gpt-3.5-turbo", temperature = 0.3):
+    def chatcompletion(self, messages, temperature = 0.3):
         """
         ChatGPT interaction.
 
@@ -24,7 +25,7 @@ class GPT:
         """
 
         completion = self.client.chat.completions.create(
-        model=model,
+        model=self.model,
         messages=messages,
         temperature=temperature
         )     
