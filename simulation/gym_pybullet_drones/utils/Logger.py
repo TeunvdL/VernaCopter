@@ -40,8 +40,6 @@ class Logger(object):
         """
         self.COLAB = colab
         self.OUTPUT_FOLDER = output_folder
-        if not os.path.exists(self.OUTPUT_FOLDER):
-            os.mkdir(self.OUTPUT_FOLDER)
         self.LOGGING_FREQ_HZ = logging_freq_hz
         self.NUM_DRONES = num_drones
         self.PREALLOCATED_ARRAYS = False if duration_sec == 0 else True
@@ -100,6 +98,8 @@ class Logger(object):
             (12,)-shaped array of floats containing the drone's control target.
 
         """
+        if not os.path.exists(self.OUTPUT_FOLDER):
+            os.mkdir(self.OUTPUT_FOLDER)
         if drone < 0 or drone >= self.NUM_DRONES or timestamp < 0 or len(state) != 20 or len(control) != 12:
             print("[ERROR] in Logger.log(), invalid data")
         current_counter = int(self.counters[drone])
