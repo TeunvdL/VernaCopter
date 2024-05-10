@@ -10,10 +10,9 @@ import json
 
 # Parameters
 max_acc = 10                            # maximum acceleration in m/s^2
-max_speed = 0.5                         # maximum speed in m/s
-T_initial = 50                          # Initial time horizon in seconds 
+max_speed = 0.5                         # maximum speed in m/s 
 dt = 0.7                                # time step in seconds
-scenario_name = "treasure_hunt"         # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+scenario_name = "reach_avoid"           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
 GPT_model = "gpt-3.5-turbo"             # GPT version: "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", etc.
 
 # System flags
@@ -24,8 +23,8 @@ manual_spec_check_enabled = True        # Enable manual specification check
 manual_trajectory_check_enabled = True  # Enable manual trajectory check
 
 # Visualization flags
-animate_final_trajectory = False        # Animate the final trajectory
-show_map = True                         # Show a map of the scenario at the start of the program
+animate_final_trajectory = True         # Animate the final trajectory
+show_map = False                        # Show a map of the scenario at the start of the program
 
 # Logging flags
 solver_verbose = False                  # Enable solver verbose
@@ -40,6 +39,7 @@ scenario = Scenarios(scenario_name)
 objects = scenario.objects
 x0 = scenario.starting_state
 if show_map: scenario.show_map()
+T_initial = scenario.get_time_horizon() # Initial time horizon in seconds
 
 # Initializations
 T = T_initial                           # Initialize the time horizon
@@ -181,11 +181,6 @@ if all_x.shape[1] == 1:
     print(logger.color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
 else:
     print(logger.color_text("The full trajectory is generated.", 'yellow'))
-    #visualizer = Visualizer(all_x, objects, animate=animate_final_trajectory)
-    #visualizer.visualize_trajectory()
-    #visualizer.plot_distance_to_objects()
-    #plt.pause(1)
-
     if animate_final_trajectory:
         try:
             waypoints = all_x[:3].T
@@ -204,11 +199,14 @@ else:
 
             INIT_RPYS = np.array([[0, 0, 0]])
 
+            # start simulation when the user presses enter
+            input("Press Enter to start the simulation.")
+
             run(waypoints=TARGET_POS, 
             initial_rpys=INIT_RPYS,    
             objects=objects,
-            duration_sec=T,
-            )
+            duration_sec=T-10)
+
         except:
             print(logger.color_text("Failed to animate the final trajectory.", 'yellow'))
             pass
@@ -243,23 +241,30 @@ while True:
             json.dump(messages, f)
 
 
-        # make metadata file using system flags
+        ### Generate metadata file ###
+
+        # find and count number of user messages
+        user_message_count = 0
+        for message in messages:
+            if message['role'] == 'user':
+                user_message_count += 1
+
         metadata = {
-            "max_acc": max_acc,
-            "max_speed": max_speed,
-            "T_initial": T_initial,
-            "dt": dt,
             "scenario_name": scenario_name,
+            "task_accomplished": task_accomplished,
+            "user_message_count": user_message_count,
             "GPT_version": GPT_model,
             "syntax_checker_enabled": syntax_checker_enabled,
             "spec_checker_enabled": spec_checker_enabled,
             "dynamicless_check_enabled": dynamicless_check_enabled,
             "manual_spec_check_enabled": manual_spec_check_enabled,
             "manual_trajectory_check_enabled": manual_trajectory_check_enabled,
-            "print_ChatGPT_instructions": print_ChatGPT_instructions,
             "syntax_check_limit": syntax_check_limit,
             "spec_check_limit": spec_check_limit,
-            "task_accomplished": task_accomplished,
+            "max_acc": max_acc,
+            "max_speed": max_speed,
+            "T_initial": T_initial,
+            "dt": dt,
         }
 
         metadata_file_name = f'{experiment_id}_METADATA.json'
