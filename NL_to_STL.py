@@ -1,7 +1,6 @@
 from GPT import *
 from STL_to_path import *
 import os
-import time
 from logger import *
 
 class NL_to_STL:
