@@ -174,10 +174,11 @@ def run(waypoints,          # waypoints to follow, shape (N, 3)
         for j in range(num_drones):
             action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
                                                                     state=obs[j],
-                                                                    target_pos=np.hstack([waypoints[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
                                                                     # target_pos=INIT_XYZS[j, :] + waypoints[wp_counters[j], :],
+                                                                    target_pos=waypoints[wp_counters[j], :],
                                                                     target_rpy=INIT_RPYS[j, :]
                                                                     )
+            #print("j: ", j, "wp_counters[j]: ", wp_counters[j], "target_pos=waypoints[wp_counters[j], :]: ", waypoints[wp_counters[j], :])
 
         #### Go to the next way point and loop #####################
         for j in range(num_drones):
