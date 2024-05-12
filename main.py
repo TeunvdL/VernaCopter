@@ -1,13 +1,13 @@
 from STL_to_path import *
 from LLM.GPT import *
 from LLM.NL_to_STL import *
-from visualization import *
+from visuals.visualization import *
 from logger import color_text
 from scenarios import *
 from spec_check import *
 from setup import parameters
 from experiments.save_results import save_results
-from simulation.simulation import simulate
+from visuals.simulation.simulation import simulate
 
 pars = parameters() # Get the parameters
 

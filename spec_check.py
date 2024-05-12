@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from GPT import GPT
-from NL_to_STL import NL_to_STL
+from LLM.GPT import GPT
+from LLM.NL_to_STL import NL_to_STL
 from logger import color_text
 
 class Spec_checker:
