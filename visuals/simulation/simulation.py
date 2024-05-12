@@ -1,6 +1,6 @@
 from logger import color_text
 import numpy as np
-from pid_edited_pipeline import run
+from .pid_edited_pipeline import run
 
 def simulate(pars, objects, all_x, T):
     """
