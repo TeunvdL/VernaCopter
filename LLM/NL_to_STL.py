@@ -1,4 +1,4 @@
-from GPT import *
+from .GPT import *
 from STL_to_path import *
 import os
 from logger import color_text
