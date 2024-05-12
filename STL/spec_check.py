@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from LLM.GPT import GPT
 from LLM.NL_to_STL import NL_to_STL
-from logger import color_text
+from basics.logger import color_text
 
 class Spec_checker:
     def __init__(self, objects, x, N, dt):

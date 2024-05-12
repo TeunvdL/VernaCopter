@@ -1,4 +1,4 @@
-from logger import color_text
+from basics.logger import color_text
 import numpy as np
 from .pid_edited_pipeline import run
 

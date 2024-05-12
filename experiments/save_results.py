@@ -1,6 +1,6 @@
 import os
 import json
-from logger import color_text
+from basics.logger import color_text
 
 def save_results(pars, messages, task_accomplished):
     save_results = False

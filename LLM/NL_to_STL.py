@@ -1,7 +1,7 @@
 from .GPT import *
-from STL_to_path import *
+from STL.STL_to_path import *
 import os
-from logger import color_text
+from basics.logger import color_text
 
 class NL_to_STL:
     """
