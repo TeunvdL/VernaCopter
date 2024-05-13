@@ -1,8 +1,4 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from scenarios import *
+from .scenarios import *
 
 class Default_parameters:
     def __init__(self):
@@ -31,9 +27,13 @@ class Default_parameters:
         # Loop iteration limits
         self.syntax_check_limit = 5                  # Maximum number of syntax check iterations
         self.spec_check_limit = 5                    # Maximum number of specification check iterations
+
+        self.instructions_file = 'ChatGPT_instructions.txt'
         
         scenario = Scenarios(self.scenario_name)
         self.T_initial = scenario.T_initial          # Initial time
+
+        self.save_results = False                    # Save results to a file
 
 class One_shot_parameters:
     def __init__(self):
@@ -47,7 +47,7 @@ class One_shot_parameters:
         # System flags
         self.syntax_checker_enabled = True           # Enable syntax check for the trajectory
         self.spec_checker_enabled = True             # Enable specification check
-        self.dynamicless_check_enabled = True        # Enable dynamicless specification check
+        self.dynamicless_check_enabled = False        # Enable dynamicless specification check
         self.manual_spec_check_enabled = False       # Enable manual specification check
         self.manual_trajectory_check_enabled = False # Enable manual trajectory check
 
@@ -62,6 +62,10 @@ class One_shot_parameters:
         # Loop iteration limits
         self.syntax_check_limit = 5                  # Maximum number of syntax check iterations
         self.spec_check_limit = 5                    # Maximum number of specification check iterations
+
+        self.instructions_file = 'one_shot_ChatGPT_instructions.txt'
         
         scenario = Scenarios(self.scenario_name)
         self.T_initial = scenario.T_initial          # Initial time
+
+        self.save_results = True                     # Save results to a file
