@@ -22,10 +22,10 @@ class NL_to_STL:
         spec = self.extract_spec(response)
         return spec
 
-    def gpt_conversation(self, max_inputs=10, previous_messages=[], processing_feedback=False, status="active"):
+    def gpt_conversation(self, instructions_file, max_inputs=10, previous_messages=[], processing_feedback=False, status="active"):
         
         if not previous_messages:
-            instructions_template = self.load_chatgpt_instructions('ChatGPT_instructions.txt')
+            instructions_template = self.load_chatgpt_instructions(instructions_file)
             instructions = self.insert_instruction_variables(instructions_template)
             if self.print_instructions:
                 print("Instructions: ", instructions, "\n", "______________________________")
