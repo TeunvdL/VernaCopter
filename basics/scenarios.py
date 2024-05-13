@@ -6,7 +6,7 @@ class Scenarios:
         self.scenario_name = scenario_name
         self.objects = self.get_objects()
         self.x0 = self.get_starting_state()
-        self.T = self.get_time_horizon()
+        self.T_initial = self.get_time_horizon()
 
     def get_starting_state(self):
         if self.scenario_name == "reach_avoid":
