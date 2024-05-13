@@ -34,7 +34,7 @@ def main(pars):
     while status == "active":
         # Get the specification
         if syntax_checked_spec is None: # If no syntax checked specification is available, get the specification from a conversation
-            messages, status = translator.gpt_conversation(previous_messages=previous_messages, processing_feedback=processing_feedback, status=status)
+            messages, status = translator.gpt_conversation(instructions_file=pars.instructions_file, previous_messages=previous_messages, processing_feedback=processing_feedback, status=status)
             processing_feedback = False
 
             if status == "exited":
@@ -125,19 +125,22 @@ def main(pars):
                         response = input("Accept the trajectory? (y/n): ")
                         if response.lower() == 'y':
                             print(color_text("The trajectory is accepted.", 'yellow'))
-                            all_x = np.hstack((all_x, x[:,1:]))
-                            x0 = x[:, -1]
-                            print("Current position: ", x0)
-                            processing_feedback = False
-                            # reset the flags
-                            spec_accepted = False
-                            trajectory_accepted = False
+                            trajectory_accepted = True
                             break  # Exit the loop since the trajectory is accepted
                         elif response.lower() == 'n':
                             print(color_text("The trajectory is rejected.", 'yellow'))
+                            trajectory_accepted = False
                             break  # Exit the loop since the trajectory is rejected
                         else:
                             print("Invalid input. Please enter 'y' or 'n'.")
+
+                if trajectory_accepted:
+                    all_x = np.hstack((all_x, x[:,1:]))
+                    x0 = x[:, -1]
+                    print("Current position: ", x0)
+                    # reset the flags
+                    spec_accepted = False
+                    trajectory_accepted = False
 
             except:
                 print(color_text("The trajectory is infeasible.", 'yellow'))
@@ -163,11 +166,11 @@ def main(pars):
     inside_objects_array = spec_checker.get_inside_objects_array()
     task_accomplished = spec_checker.task_accomplished_check(inside_objects_array, pars.scenario_name)
 
-    # Save the results (optional, user input required)
-    pars.T_initial = scenario.T
-    save_results(pars, messages, task_accomplished)
+    if pars.save_results:
+        save_results(pars, messages, task_accomplished)
 
     print(color_text("The program is completed.", 'yellow'))
 
 if __name__ == "__main__":
+    pars = Default_parameters()
     main()
