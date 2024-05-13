@@ -98,8 +98,6 @@ class Logger(object):
             (12,)-shaped array of floats containing the drone's control target.
 
         """
-        if not os.path.exists(self.OUTPUT_FOLDER):
-            os.mkdir(self.OUTPUT_FOLDER)
         if drone < 0 or drone >= self.NUM_DRONES or timestamp < 0 or len(state) != 20 or len(control) != 12:
             print("[ERROR] in Logger.log(), invalid data")
         current_counter = int(self.counters[drone])
@@ -123,6 +121,8 @@ class Logger(object):
     def save(self):
         """Save the logs to file.
         """
+        if not os.path.exists(self.OUTPUT_FOLDER):
+            os.mkdir(self.OUTPUT_FOLDER)
         with open(os.path.join(self.OUTPUT_FOLDER, "save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy"), 'wb') as out_file:
             np.savez(out_file, timestamps=self.timestamps, states=self.states, controls=self.controls)
 
