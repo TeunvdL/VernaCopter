@@ -1,12 +1,12 @@
 from .scenarios import *
 
 class Default_parameters:
-    def __init__(self):
+    def __init__(self, scenario_name="reach_avoid"):
         # Parameters
         self.max_acc = 10                            # maximum acceleration in m/s^2
         self.max_speed = 0.5                         # maximum speed in m/s 
         self.dt = 0.7                                # time step in seconds
-        self.scenario_name = "reach_avoid"           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+        self.scenario_name = scenario_name           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
         self.GPT_model = "gpt-3.5-turbo"             # GPT version: "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", etc.
 
         # System flags
@@ -39,12 +39,12 @@ class Default_parameters:
         self.automated_user_input = ""               # Automated user input
 
 class One_shot_parameters:
-    def __init__(self):
+    def __init__(self, scenario_name="reach_avoid"):
         # Parameters
         self.max_acc = 10                            # maximum acceleration in m/s^2
         self.max_speed = 0.5                         # maximum speed in m/s 
         self.dt = 0.7                                # time step in seconds
-        self.scenario_name = "reach_avoid"           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
+        self.scenario_name = scenario_name           # scenario: "reach_avoid", "narrow_maze", or "treasure_hunt"
         self.GPT_model = "gpt-3.5-turbo"             # GPT version: "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", etc.
 
         # System flags
