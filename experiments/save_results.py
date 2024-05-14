@@ -62,3 +62,5 @@ def save_results(pars, messages, task_accomplished):
 
     with open(metadata_file_path, 'w') as f:
         json.dump(metadata, f)
+
+    print(color_text(f"Results saved in {experiments_directory}", 'yellow'))
