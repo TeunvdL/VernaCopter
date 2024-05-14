@@ -5,7 +5,6 @@ from STL.spec_check import *
 from basics.logger import color_text
 from basics.scenarios import *
 from basics.setup import Default_parameters
-from experiments.save_results import save_results
 from visuals.simulation.simulation import simulate
 from visuals.visualization import *
 
@@ -42,11 +41,13 @@ def main(pars):
                                                            processing_feedback=processing_feedback, 
                                                            status=status, automated_user=pars.automated_user, 
                                                            automated_user_input=scenario.automated_user_input)
+            
+            if status == "exited": # If the user exits the conversation, break the loop
+                break
+
+            spec = translator.get_specs(messages)
             processing_feedback = False
 
-            if status == "exited":
-                break
-            spec = translator.get_specs(messages)
         else: # If a syntax checked specification is available, use it
             spec = syntax_checked_spec
             syntax_checked_spec = None
@@ -71,7 +72,7 @@ def main(pars):
                     spec_check_response = spec_checker.GPT_spec_check(scenario.objects, inside_objects_array, messages)
                     spec_accepted = spec_checker.spec_accepted_check(spec_check_response)
                     if not spec_accepted:
-                        print(color_text("The specification is rejected by the checker. Processing feedback...", 'yellow'))
+                        print(color_text("The specification is rejected by the checker.", 'yellow'))
                         spec_checker_message = {"role": "system", "content": f"Specification checker: {spec_check_response}"}
                         messages.append(spec_checker_message)
                         processing_feedback = True
@@ -102,6 +103,10 @@ def main(pars):
                     syntax_checked_spec = translator.gpt_syntax_checker(spec)
                     syntax_checker_iteration += 1
 
+                else:
+                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of syntax check iterations.")
+                    break
+
         if not pars.dynamicless_check_enabled or spec_accepted:
             print(color_text("Generating the trajectory...", 'yellow'))
             try:
@@ -117,7 +122,7 @@ def main(pars):
                     spec_check_response = spec_checker.GPT_spec_check(scenario.objects, inside_objects_array, messages)
                     trajectory_accepted = spec_checker.spec_accepted_check(spec_check_response)
                     if not trajectory_accepted:
-                        print(color_text("The trajectory is rejected by the checker. Processing feedback...", 'yellow'))
+                        print(color_text("The trajectory is rejected by the checker.", 'yellow'))
                         spec_checker_message = {"role": "system", "content": f"Specification checker: {spec_check_response}"}
                         messages.append(spec_checker_message)
                         processing_feedback = True
@@ -156,6 +161,11 @@ def main(pars):
                     syntax_checked_spec = translator.gpt_syntax_checker(spec)
                     syntax_checker_iteration += 1
 
+                else:
+                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of syntax check iterations.")
+                    break
+
+
         previous_messages = messages
 
         if pars.automated_user and trajectory_accepted:
@@ -173,10 +183,9 @@ def main(pars):
     inside_objects_array = spec_checker.get_inside_objects_array()
     task_accomplished = spec_checker.task_accomplished_check(inside_objects_array, pars.scenario_name)
 
-    if pars.save_results:
-        save_results(pars, messages, task_accomplished)
-
     print(color_text("The program is completed.", 'yellow'))
+
+    return messages, task_accomplished
 
 if __name__ == "__main__":
     pars = Default_parameters()
