@@ -35,6 +35,7 @@ class NL_to_STL:
 
         if processing_feedback:
             print(color_text("Processing feedback...", 'yellow'))
+            messages.append({"role": "system", "content": "Please return a new specification directly, based on the feedback."})    
             response = self.gpt.chatcompletion(messages)
             messages.append({"role": "assistant", "content": response})
             print(color_text("Assistant:", 'cyan'), response)
