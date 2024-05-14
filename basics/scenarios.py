@@ -7,6 +7,7 @@ class Scenarios:
         self.objects = self.get_objects()
         self.x0 = self.get_starting_state()
         self.T_initial = self.get_time_horizon()
+        self.automated_user_input = self.get_automated_user_input()
 
     def get_starting_state(self):
         if self.scenario_name == "reach_avoid":
@@ -84,3 +85,12 @@ class Scenarios:
         elif self.scenario_name == "treasure_hunt":
             T = 50
         return T
+    
+    def get_automated_user_input(self):
+        if self.scenario_name == "reach_avoid":
+            automated_user_input = "Reach the goal while avoiding all obstacles."
+        elif self.scenario_name == "narrow_maze":
+            automated_user_input = "Navigate through the maze to reach the goal."
+        elif self.scenario_name == "treasure_hunt":
+            automated_user_input = "Find the key and open the door to reach the treasure."
+        return automated_user_input

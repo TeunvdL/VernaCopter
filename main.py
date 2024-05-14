@@ -22,8 +22,6 @@ def main(pars):
     x0 = scenario.x0                            # Initial position
     all_x = np.expand_dims(x0, axis=1)          # Initialize the full trajectory
     processing_feedback = False                 # Initialize the feedback processing flag
-    spec_accepted = False                       # Initialize the specification acceptance flag
-    trajectory_accepted = False                 # Initialize the trajectory acceptance flag
     syntax_checked_spec = None                  # Initialize the syntax checked specification
     spec_checker_iteration = 0                  # Initialize the specification check iteration
     syntax_checker_iteration = 0                # Initialize the syntax check iteration
@@ -32,9 +30,18 @@ def main(pars):
 
     ### Main loop ###
     while status == "active":
+
+        # Initialize/reset the flags
+        spec_accepted = False
+        trajectory_accepted = False
+
         # Get the specification
         if syntax_checked_spec is None: # If no syntax checked specification is available, get the specification from a conversation
-            messages, status = translator.gpt_conversation(instructions_file=pars.instructions_file, previous_messages=previous_messages, processing_feedback=processing_feedback, status=status)
+            messages, status = translator.gpt_conversation(instructions_file=pars.instructions_file, 
+                                                           previous_messages=previous_messages, 
+                                                           processing_feedback=processing_feedback, 
+                                                           status=status, automated_user=pars.automated_user, 
+                                                           automated_user_input=scenario.automated_user_input)
             processing_feedback = False
 
             if status == "exited":
@@ -137,10 +144,7 @@ def main(pars):
                 if trajectory_accepted:
                     all_x = np.hstack((all_x, x[:,1:]))
                     x0 = x[:, -1]
-                    print("Current position: ", x0)
-                    # reset the flags
-                    spec_accepted = False
-                    trajectory_accepted = False
+                    print("New position after trajectory: ", x0)
 
             except:
                 print(color_text("The trajectory is infeasible.", 'yellow'))
@@ -153,6 +157,9 @@ def main(pars):
                     syntax_checker_iteration += 1
 
         previous_messages = messages
+
+        if pars.automated_user and trajectory_accepted:
+            break
         
     # Visualize the full trajectory
     plt.close('all')
