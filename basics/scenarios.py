@@ -83,7 +83,7 @@ class Scenarios:
         elif self.scenario_name == "narrow_maze":
             T = 50
         elif self.scenario_name == "treasure_hunt":
-            T = 50
+            T = 70
         return T
     
     def get_automated_user_input(self):
@@ -92,5 +92,5 @@ class Scenarios:
         elif self.scenario_name == "narrow_maze":
             automated_user_input = "Navigate through the maze to reach the goal."
         elif self.scenario_name == "treasure_hunt":
-            automated_user_input = "Find the key and open the door to reach the treasure."
+            automated_user_input = "Go to the key in the first 30 seconds, then go to the chest. Avoid all walls and stay in the room at all times."
         return automated_user_input
