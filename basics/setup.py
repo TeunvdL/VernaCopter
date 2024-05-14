@@ -35,6 +35,9 @@ class Default_parameters:
 
         self.save_results = False                    # Save results to a file
 
+        self.automated_user = False                  # Automated user flag
+        self.automated_user_input = ""               # Automated user input
+
 class One_shot_parameters:
     def __init__(self):
         # Parameters
@@ -69,3 +72,6 @@ class One_shot_parameters:
         self.T_initial = scenario.T_initial          # Initial time
 
         self.save_results = True                     # Save results to a file
+
+        self.automated_user = True                   # Automated user flag
+        self.automated_user_input = "Reach the goal while avoiding the obstacles."

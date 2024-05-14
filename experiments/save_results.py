@@ -5,7 +5,13 @@ from basics.logger import color_text
 def save_results(pars, messages, task_accomplished):
     print(color_text("Saving the results...", 'yellow'))
     this_directory = os.path.dirname(os.path.abspath(__file__))
-    experiments_directory = this_directory + f'/{pars.scenario_name}/'
+
+    if pars.automated_user:
+        subfolder = 'automatic'
+    elif not pars.automated_user:
+        subfolder = 'conversation'
+
+    experiments_directory = this_directory + f'/{subfolder}/' + f'{pars.scenario_name}/'
 
     if not os.path.exists(experiments_directory):
         os.makedirs(experiments_directory)

@@ -15,3 +15,6 @@ Your task:
 1. List the requirements from the user instructions.
 2. Elaborate in words whether the proposed trajectory aligns with these user requirements. Does the trajectory achieve the goal? Does it traverse forbidden regions or objects? Does it go outside of a region or object it should stay in?
 3. After your explanation, write <accepted> or <rejected>, to inform the program whether it can continue or should change the specification.
+
+For example, if the user describes that the drone should reach a goal, and the trajectory reaches that goal at some point, the task is performed as intended. So you would accept the trajectory with <accepted>.
+However, if, for example, the user specifies that the drone should never go through an obstacle, and you find that the drone goes through one at some point, you would have to reject the trajectory with <rejected>.

@@ -22,7 +22,7 @@ class NL_to_STL:
         spec = self.extract_spec(response)
         return spec
 
-    def gpt_conversation(self, instructions_file, max_inputs=10, previous_messages=[], processing_feedback=False, status="active"):
+    def gpt_conversation(self, instructions_file, max_inputs=10, previous_messages=[], processing_feedback=False, status="active", automated_user=False, automated_user_input=""):
         
         if not previous_messages:
             instructions_template = self.load_chatgpt_instructions(instructions_file)
@@ -39,25 +39,41 @@ class NL_to_STL:
             messages.append({"role": "assistant", "content": response})
             print(color_text("Assistant:", 'cyan'), response)
         else:
-            print("Please specify the task. Type 'quit' to exit conversation and generate the final trajectory.")
-            for _ in range(max_inputs):
-                user_input = input(color_text("User: ", 'orange'))
+            if not automated_user:
+                print("Please specify the task. Type 'quit' to exit conversation and generate the final trajectory.")
+                for _ in range(max_inputs):
+                    user_input = input(color_text("User: ", 'orange'))
 
-                if user_input.lower() == 'quit':
-                    print(color_text("Exited conversation", 'yellow'))
-                    status = "exited"
-                    break
+                    if user_input.lower() == 'quit':
+                        print(color_text("Exited conversation", 'yellow'))
+                        status = "exited"
+                        break
 
-                messages.append({"role": "user", "content": user_input})
-                response = self.gpt.chatcompletion(messages)
-                messages.append({"role": "assistant", "content": response})
-                print(color_text("Assistant:", 'cyan'), response)
+                    messages.append({"role": "user", "content": user_input})
+                    response = self.gpt.chatcompletion(messages)
+                    messages.append({"role": "assistant", "content": response})
+                    print(color_text("Assistant:", 'cyan'), response)
 
-                # check if < or > symbol is present in the response and exit conversation if detected
-                if '<' in response:
-                    print("The specification was generated.")
-                    break
-    
+                    # check if < or > symbol is present in the response and exit conversation if detected
+                    if '<' in response:
+                        print("The specification was generated.")
+                        break
+            else:
+                print(color_text("Automated user: ", 'orange'), automated_user_input)
+                messages.append({"role": "user", "content": automated_user_input})
+                for _ in range(max_inputs):
+                    response = self.gpt.chatcompletion(messages)
+                    messages.append({"role": "assistant", "content": response})
+                    print(color_text("Assistant:", 'cyan'), response)
+
+                    if '<' in response:
+                            print("The specification was generated.")
+                            break
+                    else:
+                        messages.append({"role": "system", "content": "Please provide the specification now."})
+                        print("The specification was not generated correctly. Trying again...")
+
+                
         return messages, status
     
     def gpt_syntax_checker(self, spec):
