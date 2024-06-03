@@ -22,8 +22,10 @@ Temporal functions:
 Note that every specification requires a temporal function to operate on it: 
 "STL_formulas.inside_cuboid(objects["goal"]).eventually(0, 5)" will work, but "STL_formulas.inside_cuboid(objects["goal"])" won't.
 
+Also specifically note that negation is not defined. So ~ cannot be used.
+
 A time horizon is also specified, which is the maximum time that the solver considers. A value for time larger than that value should not be used. It is allowed to use smaller values.
-Currently, the time horizon (maximum time for solver) is T_MAX. This value is larger than before. Make sure to increase the time horizon in the specification where you see fit.
+The maximum allowed time is: T_MAX.
 
 Return the edited specification between "<" and ">" brackets so that it can be extracted succesfully by the system. 
 
@@ -32,7 +34,7 @@ Some examples of original specifications and desirable responses are shown below
 Example 1 - objects not specified properly:
     Original specification: STL_formulas.inside_cuboid(rock).eventually(0, 10)
     Desirable response: "The bounding box of the "rock" object is stored in the "objects"-dictionary. It can be accessed using "objects["rock"]". 
-    The edited specification is: <STL_formulas.inside_cuboid(objects["rock"]).eventually(0, 15)>
+    The edited specification is: <STL_formulas.inside_cuboid(objects["rock"]).eventually(0, 10)>
 
 Example 2 - logic functions not specified properly:
     Original specification: STL_formulas.inside_sphere(objects["goal"]).eventually(0, 45)
@@ -42,7 +44,7 @@ Example 2 - logic functions not specified properly:
 Example 3 - issue with logic operators:
     Original specification: STL_formulas.outside_cuboid(objects["obstacle_1"]).eventually(0,10) also STL_formulas.outside_cuboid(objects["obstacle_2"]).eventually(10,20)
     Desirable response: "also" is not a valid operator. Use "and" or "&" instead:
-    <STL_formulas.outside_cuboid(objects["obstacle_1"]).eventually(0,13) & STL_formulas.outside_cuboid(objects["obstacle_2"]).eventually(13,25)>
+    <STL_formulas.outside_cuboid(objects["obstacle_1"]).eventually(0,10) & STL_formulas.outside_cuboid(objects["obstacle_2"]).eventually(10,20)>
 
 Example 4 - missing temporal functions:
     Original specification: STL_formulas.inside_cuboid(objects["goal"])
@@ -53,8 +55,3 @@ Example 5 - time horizon not set correctly:
     Original specification: STL_formulas.outside_cuboid(objects["obstacle"]).always(0, 10000)
     Desirable response: The specified time horizon exceeds the maximum allowed value.
     <STL_formulas.outside_cuboid(objects["obstacle"]).always(0, T_MAX)>
-
-Example 6 - good specification, nothing should be changed except the time horizon:
-    Original specification: STL_formulas.inside_cuboid(objects["goal"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle1"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle2"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle3"]).always(0, 25) & STL_formulas.outside_cuboid(objects["obstacle4"]).always(0, 25)
-    Desirable response: The specification looks good as it is.
-    <STL_formulas.inside_cuboid(objects["goal"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle1"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle2"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle3"]).always(0, T_MAX) & STL_formulas.outside_cuboid(objects["obstacle4"]).always(0, T_MAX)>
