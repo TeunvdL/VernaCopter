@@ -112,9 +112,6 @@ class Spec_checker:
                 
             return task_accomplished
         
-        elif scenario_name == "narrow_maze":
-            pass
-        
         elif scenario_name == "treasure_hunt":
             # test if chest is reached
             chest_reached = 1 in objects_inside['chest']
