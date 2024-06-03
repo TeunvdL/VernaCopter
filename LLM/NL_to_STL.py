@@ -115,4 +115,5 @@ class NL_to_STL:
             end = response.find(">", start)
             spec = response[start+1:end]
             start = end + 1
+            spec = spec.replace("\n", " ") # remove returns
         return spec
