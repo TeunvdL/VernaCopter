@@ -1,8 +1,9 @@
 from basics.logger import color_text
 import numpy as np
 from .pid_edited_pipeline import run
+from basics.scenarios import *
 
-def simulate(pars, objects, all_x, T):
+def simulate(pars, scenario, all_x):
     """
     Generate waypoints for the final trajectory animation.
     """
@@ -29,8 +30,8 @@ def simulate(pars, objects, all_x, T):
 
                 run(waypoints=TARGET_POS, 
                 initial_rpys=INIT_RPYS,    
-                objects=objects,
-                duration_sec=T-10)
+                scenario=scenario,
+                save_animation=pars.save_animation)
 
             except:
                 print(color_text("Failed to animate the final trajectory.", 'yellow'))

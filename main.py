@@ -179,7 +179,7 @@ def main(pars=Default_parameters()):
         print(color_text("No trajectories were accepted. Exiting the program.", 'yellow'))
     else:
         print(color_text("The full trajectory is generated.", 'yellow'))
-        simulate(pars, scenario.objects, all_x, T) # Animate the final trajectory
+        simulate(pars, scenario, all_x) # Animate the final trajectory
 
     spec_checker = Spec_checker(scenario.objects, all_x, N, pars.dt)
     inside_objects_array = spec_checker.get_inside_objects_array()
