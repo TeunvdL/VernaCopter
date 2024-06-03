@@ -8,7 +8,7 @@ from basics.setup import Default_parameters
 from visuals.simulation.simulation import simulate
 from visuals.visualization import *
 
-def main(pars):
+def main(pars=Default_parameters()): 
     # Set up scenario
     scenario = Scenarios(pars.scenario_name)    # Set up the scenario
     if pars.show_map: scenario.show_map()       # Show the map if the flag is set
@@ -62,7 +62,7 @@ def main(pars):
                 no_dynamics_x, no_dynamics_u = solver.generate_trajectory(pars.dt, pars.max_acc, pars.max_speed, verbose=pars.solver_verbose, include_dynamics=False)
                 spec_checker = Spec_checker(scenario.objects, no_dynamics_x, N, pars.dt)
                 inside_objects_array = spec_checker.get_inside_objects_array()
-                visualizer = Visualizer(no_dynamics_x, scenario.objects, animate=False)
+                visualizer = Visualizer(no_dynamics_x, scenario, animate=False)
                 fig, ax = visualizer.visualize_trajectory()
                 plt.pause(1)
                 fig, ax = spec_checker.visualize_spec(inside_objects_array)
@@ -77,6 +77,10 @@ def main(pars):
                         messages.append(spec_checker_message)
                         processing_feedback = True
                     spec_checker_iteration += 1
+
+                elif spec_checker_iteration > pars.spec_check_limit:
+                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of spec check iterations.")
+                    break
 
                 if pars.manual_spec_check_enabled:
                     while True:
@@ -95,15 +99,12 @@ def main(pars):
 
             except:
                 print(color_text("The specification is infeasible.", 'yellow'))
-                if pars.syntax_checker_enabled and syntax_checker_iteration < pars.syntax_check_limit:
-                    T = T + 5
-                    N = int(T/pars.dt)
-                    print(color_text(f"The time horizon is increased by 5 seconds. New T_max = {T}. N_max = {N}.", 'yellow'))
+                if pars.syntax_checker_enabled and syntax_checker_iteration <= pars.syntax_check_limit:
                     print(color_text("Checking the syntax of the specification...", 'yellow'))
                     syntax_checked_spec = translator.gpt_syntax_checker(spec)
                     syntax_checker_iteration += 1
 
-                else:
+                elif syntax_checker_iteration > pars.syntax_check_limit:
                     print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of syntax check iterations.")
                     break
 
@@ -113,7 +114,7 @@ def main(pars):
                 x,u = solver.generate_trajectory(pars.dt, pars.max_acc, pars.max_speed, verbose=pars.solver_verbose, include_dynamics=True)
                 spec_checker = Spec_checker(scenario.objects, x, N, pars.dt)
                 inside_objects_array = spec_checker.get_inside_objects_array()
-                visualizer = Visualizer(x, scenario.objects, animate=False)
+                visualizer = Visualizer(x, scenario, animate=False)
                 fig, ax = visualizer.visualize_trajectory()
                 plt.pause(1)
                 fig, ax = spec_checker.visualize_spec(inside_objects_array)
@@ -127,6 +128,9 @@ def main(pars):
                         messages.append(spec_checker_message)
                         processing_feedback = True
                     spec_checker_iteration += 1
+                elif spec_checker_iteration > pars.spec_check_limit:
+                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of spec check iterations.")
+                    break
 
                 if np.isnan(x).all():
                     raise Exception("The trajectory is infeasible.")
@@ -153,22 +157,20 @@ def main(pars):
 
             except:
                 print(color_text("The trajectory is infeasible.", 'yellow'))
-                if pars.syntax_checker_enabled and syntax_checker_iteration < pars.syntax_check_limit:
-                    T = T + 5
-                    N = int(T/pars.dt)
-                    print(color_text(f"The time horizon is increased by 5 seconds. New T_max = {T}. N_max = {N}.", 'yellow'))
+                if pars.syntax_checker_enabled and syntax_checker_iteration <= pars.syntax_check_limit:
                     print(color_text("Checking the syntax of the specification...", 'yellow'))
                     syntax_checked_spec = translator.gpt_syntax_checker(spec)
                     syntax_checker_iteration += 1
 
-                else:
+                elif syntax_checker_iteration > pars.syntax_check_limit:
                     print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of syntax check iterations.")
                     break
 
 
         previous_messages = messages
 
-        if pars.automated_user and trajectory_accepted:
+        if pars.automated_user and (trajectory_accepted or not pars.spec_checker_enabled):
+            all_x = np.hstack((all_x, x[:,1:]))
             break
         
     # Visualize the full trajectory
