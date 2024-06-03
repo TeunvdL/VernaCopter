@@ -18,6 +18,7 @@ class Default_parameters:
 
         # Visualization flags
         self.animate_final_trajectory = True         # Animate the final trajectory
+        self.save_animation = False                  # Save the final trajectory animation
         self.show_map = False                        # Show a map of the scenario at the start of the program
 
         # Logging flags
@@ -38,6 +39,7 @@ class Default_parameters:
         self.automated_user = False                  # Automated user flag
         self.automated_user_input = ""               # Automated user input
 
+
 class One_shot_parameters:
     def __init__(self, scenario_name="reach_avoid"):
         # Parameters
@@ -50,12 +52,13 @@ class One_shot_parameters:
         # System flags
         self.syntax_checker_enabled = True           # Enable syntax check for the trajectory
         self.spec_checker_enabled = True             # Enable specification check
-        self.dynamicless_check_enabled = False        # Enable dynamicless specification check
+        self.dynamicless_check_enabled = False       # Enable dynamicless specification check
         self.manual_spec_check_enabled = False       # Enable manual specification check
         self.manual_trajectory_check_enabled = False # Enable manual trajectory check
 
         # Visualization flags
-        self.animate_final_trajectory = False         # Animate the final trajectory
+        self.animate_final_trajectory = False        # Animate the final trajectory
+        self.save_animation = False                  # Save the final trajectory animation
         self.show_map = False                        # Show a map of the scenario at the start of the program
 
         # Logging flags
