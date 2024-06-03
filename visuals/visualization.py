@@ -2,18 +2,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 from matplotlib import animation
+from basics.scenarios import Scenarios
 
 class Visualizer:
-    def __init__(self, x, objects, animate = False): 
-        self.x = x[:3, :]                       # waypoints (only positions)
-        self.objects = objects                  # objects
-        self.dt = 0.05                          # time step
-        self.dT = 1                             # time to reach target
-        n = int(self.dT/self.dt)                # number of time steps between two targets
-        self.n_points = self.x.shape[1]         # number of targets
-        self.times = np.linspace(0, self.dT, n) # time array
-        T = (self.n_points-1)*self.dT           # total time
-        self.N = int(T/self.dt)                 # number of time steps
+    def __init__(self, x, scenario, animate = False): 
+        self.x = x[:3, :]                               # waypoints (only positions)
+        self.scenario_name = scenario.scenario_name     # scenario name
+        self.objects = scenario.objects                 # objects
+        self.dt = 0.05                                  # time step
+        self.dT = 1                                     # time to reach target
+        n = int(self.dT/self.dt)                        # number of time steps between two targets
+        self.n_points = self.x.shape[1]                 # number of targets
+        self.times = np.linspace(0, self.dT, n)         # time array
+        T = (self.n_points-1)*self.dT                   # total time
+        self.N = int(T/self.dt)                         # number of time steps
 
         if animate:
             self.anim_fig = plt.figure(figsize=(6,6))
@@ -28,42 +30,46 @@ class Visualizer:
         None.
 
         """
-        fig = plt.figure(figsize=(6,6))
+        fig = plt.figure(figsize=(10,10))
         ax = fig.add_subplot(111, projection='3d')
         ax.set_title('Trajectory')
         ax.scatter(self.x[0,:], self.x[1,:], self.x[2,:], 'b', label='Trajectory')
-        ax.scatter(self.x[0,0], self.x[1,0], self.x[2,0], c='g', label='Start')
+        ax.scatter(self.x[0,0], self.x[1,0], self.x[2,0], c='g', label='Start', s=10)
 
         for object in self.objects:
             center, length, width, height = self.get_clwh(object)
             X, Y, Z = shapes.make_cuboid(center, (length, width, height))
-            # check if object name contains 'obstacle' or 'goal'
-            if 'obstacle' in object:
-                ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            elif 'goal' in object:
-                ax.plot_surface(X, Y, Z, color='g', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            elif 'wall' in object:
-                ax.plot_surface(X, Y, Z, color='gray', rstride=1, cstride=1, alpha=0.05, linewidth=1., edgecolor='k')
-            elif 'door' in object:
-                ax.plot_surface(X, Y, Z, color='brown', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            elif 'key' in object:
-                ax.plot_surface(X, Y, Z, color='green', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            elif 'chest' in object:
-                ax.plot_surface(X, Y, Z, color='yellow', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            elif 'bounds' in object:
-                pass
-            else:
-                ax.plot_surface(X, Y, Z, color='b', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
-            # show object names
-            ax.text(center[0], center[1], center[2], object)
+            if self.scenario_name == "reach_avoid": 
+                if 'obstacle' in object: # check if object name contains 'obstacle'
+                    ax.plot_surface(X, Y, Z, color='r', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
+                elif 'goal' in object: # check if object name contains 'goal'
+                    ax.plot_surface(X, Y, Z, color='#28d778', rstride=1, cstride=1, alpha=0.2, linewidth=1., edgecolor='k')
 
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
+                ax.set_xlim(-4.5, 4.5)
+                ax.set_ylim(-4, 5)
+                ax.set_zlim(0, 5)
 
-        ax.set_xlim(-6, 6)
-        ax.set_ylim(-6, 6)
-        ax.set_zlim(0, 8.5)
+            elif self.scenario_name == "treasure_hunt":
+                if 'wall' in object:
+                    ax.plot_surface(X, Y, Z, color='#a3a3a3', rstride=1, cstride=1, alpha=0.05, linewidth=1., edgecolor='k')
+                elif 'key' in object:
+                    ax.plot_surface(X, Y, Z, color='#28d778', rstride=1, cstride=1, alpha=0.5, linewidth=1., edgecolor='k')
+                    ax.text(center[0], center[1], center[2] + 1.2, 'door key', horizontalalignment='center', verticalalignment='center') # show key name
+                elif 'door' in object:
+                    ax.plot_surface(X, Y, Z, color='#c2853d', rstride=1, cstride=1, alpha=0.5, linewidth=1., edgecolor='k')
+                    ax.text(center[0], center[1] - 2, center[2] + 0.5, object, horizontalalignment='center', verticalalignment='center') # show door name
+                elif 'chest' in object:
+                    ax.plot_surface(X, Y, Z, color='#FFD700', rstride=1, cstride=1, alpha=0.5, linewidth=1., edgecolor='k')
+                    ax.text(center[0] - 1.5, center[1], center[2] - 0.2, object, horizontalalignment='center', verticalalignment='center') # show chest name
+                elif 'bounds' in object:
+                    ax.plot_surface(X, Y, Z, color='#a3a3a3', rstride=1, cstride=1, alpha=0.02, linewidth=1., edgecolor='k')
+
+                ax.set_xlim(-4.5, 4.5)
+                ax.set_ylim(-4.5, 4.5)
+                ax.set_zlim(0, 6.4)
+
+        # disable axes
+        ax.set_axis_off()
 
         return fig, ax
 
