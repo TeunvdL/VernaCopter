@@ -55,7 +55,7 @@ class Scenarios:
             objects = {"door_key" : (3.75, 4.75, 3.75, 4.75, 1., 2.),
                        "chest": (-4.25, -3, -4.5, -3.75, 0., 0.75),
                        "door": (0., 0.5, -2.5, -1, 0., 2.5),
-                       "region_bounds": (-5., 5., -5., 5., 0., 3.),
+                       "room_bounds": (-5., 5., -5., 5., 0., 3.),
                        "NE_inside_wall": (2., 5., 3., 3.5, 0., 3.),
                        "south_mid_inside_wall": (0., 0.5, -5., -2.5, 0., 3.),
                        "north_mid_inside_wall": (0., 0.5, -1., 5., 0., 3.),
@@ -92,5 +92,5 @@ class Scenarios:
         elif self.scenario_name == "narrow_maze":
             automated_user_input = "Navigate through the maze to reach the goal."
         elif self.scenario_name == "treasure_hunt":
-            automated_user_input = "Go to the key in the first 30 seconds, then go to the chest. Avoid all walls and stay in the room at all times."
+            automated_user_input = "Go to the key in the first 30 seconds, then go to the chest. Avoid all walls and stay in the room at all times. The door will open when you reach the key."
         return automated_user_input
