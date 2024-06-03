@@ -56,7 +56,8 @@ class Spec_checker:
             elif np.all(inside_objects_array[i,:] == 0):
                 output += f"The drone is never inside the {object}.\n"
             else:
-                output += f"The drone is inside the {object} at some point, but not always.\n"
+                inside_times = np.where(inside_objects_array[i,:] == 1)[0] # get the times when the drone is inside the object
+                output += f"The drone is inside the {object} at times {inside_times}.\n"
         return output
 
     def visualize_spec(self, inside_objects_array):
