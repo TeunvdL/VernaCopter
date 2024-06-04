@@ -139,7 +139,7 @@ cython_debug/
 *.pyc
 ChatGPT_key.txt
 iteun_key.txt
-*.npy
+# *.npy
 *.csv
 Archived/
 *.mp4
