@@ -12,28 +12,21 @@ This repository presents the code for VernaCopter, a framework for natural langu
 
 ## Abstract
 
-The ability to control robots was traditionally chiefly attributed to experts. However, the recent emergence
-of Large Language Models (LLMs) enables user to command robots using LLMs’ exceptional natural language
-processing abilities. Previous studies applied LLMs to convert tasks in natural language into robot controllers
-using a set of predefined high-level operations. However, this approach does not guarantee safety or optimality. This
-thesis introduces VernaCopter, a system that empowers non-technical users to control quadrocopters using natural
-language. Signal Temporal Logic (STL) functions as an intermediate representation of tasks specified in natural
-language. The LLM is responsible for task planning, whereas formal methods handle motion planning, addressing the
-abovementioned limitations. Automatic LLM-based syntax and semantics checkers are employed to improve the quality
-of STL specifications. The system’s performance was tested in experiments in varying scenarios, varying user involvement,
-and with and without automatic checkers. The experiments showed that including the user in conversation improves
-performance. Furthermore, the specific LLM used plays a significant role in the performance, while the checkers do
-not benefit the system due to frequent miscorrections.
+The ability to control robots was traditionally chiefly attributed to experts. However, the recent emergence of Large Language Models (LLMs) enables user to command robots using LLMs’ exceptional natural language processing abilities. Previous studies applied LLMs to convert tasks in natural language into robot controllers using a set of predefined high-level operations. However, this approach does not guarantee safety or optimality. This thesis introduces VernaCopter, a system that empowers on-technical users to control quadrocopters using natural language. Signal Temporal Logic (STL) functions as an intermediate representation of tasks specified in natural language. The LLM is responsible for task planning, whereas formal methods handle motion planning, addressing the abovementioned limitations. Automatic LLM-based syntax and semantics checkers are employed to improve the quality of STL specifications. The system’s performance was tested in experiments in varying scenarios, varying user involvement, and with and without automatic checkers. The experiments showed that including the user in conversation improves performance. Furthermore, the specific LLM used plays a significant role in the performance, while the checkers do not benefit the system due to frequent miscorrections.
 
 ## Installation
 
 ### Prerequisites
-- List of prerequisites
 
-### Steps
-1. Step one
-2. Step two
-3. ...
+Before you begin, ensure you have met the following requirements:
+- You have installed Python 3.7 or higher.
+- You have an OpenAI API key. If you don't have one, you can sign up and obtain it from [OpenAI](https://beta.openai.com/signup/).
+
+### Clone the Repository
+
+Clone the repository to your local machine using the following command:
+
+git clone https://github.com/TeunvdL/ChatGPT_Drone_Control.git
 
 ## Usage
 
