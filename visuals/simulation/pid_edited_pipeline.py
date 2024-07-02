@@ -114,7 +114,7 @@ def run(waypoints,              # waypoints to follow, shape (N, 3)
     wp_counters = np.array([0 for i in range(num_drones)])
 
     if scenario.scenario_name == "reach_avoid":
-        duration_sec = 20
+        duration_sec = 15
     elif scenario.scenario_name == "treasure_hunt":
         duration_sec = 20
     else:
@@ -135,6 +135,8 @@ def run(waypoints,              # waypoints to follow, shape (N, 3)
                         user_debug_gui=user_debug_gui
                         )
     
+    p.changeVisualShape(env.PLANE_ID, -1, rgbaColor=[0, 0, 0, 0])
+    
     #### Add animation of the target trajectory ################
     if save_animation:
         videopath = "visuals/simulation/video/"
@@ -147,7 +149,10 @@ def run(waypoints,              # waypoints to follow, shape (N, 3)
 
     #### Set the camera at a fixed position ####################
     ### Set camera view
-    p.resetDebugVisualizerCamera(cameraDistance=7, cameraYaw=15, cameraPitch=-65, cameraTargetPosition=[0,-2,1.5])
+    if scenario.scenario_name == "reach_avoid":
+        p.resetDebugVisualizerCamera(cameraDistance=9, cameraYaw=0, cameraPitch=-40, cameraTargetPosition=[0,0,1.5])
+    elif scenario.scenario_name == "treasure_hunt":
+        p.resetDebugVisualizerCamera(cameraDistance=7, cameraYaw=15, cameraPitch=-65, cameraTargetPosition=[0,-2,1.5])
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
@@ -170,29 +175,60 @@ def run(waypoints,              # waypoints to follow, shape (N, 3)
                 cube_color = [0.1568627450980392, 0.8431372549019608, 0.47058823529411764]
                 cube_alpha = 0.2
 
+            cube_bounds = scenario.objects[object]
+            create_cube(p, cube_bounds, cube_color, cube_alpha)
+
         elif scenario.scenario_name == "treasure_hunt":
             if 'wall' in object:
-                cube_color = [0.8, 0.8, 0.8]
-                cube_alpha = 0.5
-            elif 'key' in object:
+                cube_color = [0.9, 0.9, 0.9]
+                cube_alpha = 0.3
+            elif object == 'door_key':
                 cube_color = [0.1568627450980392, 0.8431372549019608, 0.47058823529411764]
                 cube_alpha = 0.9
-            elif 'door' in object:
-                cube_color = [0.7607843137254902, 0.5215686274509804, 0.23921568627450981]
-                cube_alpha = 0.9
-            elif 'chest' in object:
+                cube_bounds = scenario.objects[object]
+                key_id = create_cube(p, cube_bounds, cube_color, cube_alpha)
+            elif object == 'chest':
                 cube_color = [1.,0.8431372549019608, 0.]
                 cube_alpha = 0.9
-            elif 'bounds' in object:
-                cube_color = [0.8, 0.8, 0.8]
-                cube_alpha = 0.4
+            elif object == 'door':
+                cube_color = [0.28627450980392155, 0.47843137254901963, 0.8235294117647058]
+                cube_alpha = 0.9
+                cube_bounds = scenario.objects[object]
+                door_id = create_cube(p, cube_bounds, cube_color, cube_alpha)
 
-        cube_bounds = scenario.objects[object]
-        create_cube(p, cube_bounds, cube_color, cube_alpha)
+            if object != "room_bounds" and object != "door" and object != "door_key":
+                cube_bounds = scenario.objects[object]
+                create_cube(p, cube_bounds, cube_color, cube_alpha)
+
+            # make separate floor
+            wall_thickness = 0.3
+            floor_color = [0.4392156862745098, 0.2235294117647059, 0.15294117647058825]
+            
+            floor_bounds = (-5 - wall_thickness, 5 + wall_thickness, -5 - wall_thickness, 5 + wall_thickness, -0.5, 0)
+            floor_alpha = 1.0
+            floor_id = create_cube(p, floor_bounds, floor_color, floor_alpha)
+            #p.changeVisualShape(floor_id, -1, textureUniqueId=p.loadTexture('WoodPallet.png'))
+
+            # make saparate walls
+            wall_alpha = 1.0
+            wall_color = [0.9, 0.9, 0.9]
+
+            west_wall_bounds = (-5 - wall_thickness, -5, -5 - wall_thickness, 5 + wall_thickness, 0, 3)
+            create_cube(p, west_wall_bounds, wall_color, wall_alpha)
+
+            east_wall_bounds = (5, 5 + wall_thickness, -5 - wall_thickness, 5 + wall_thickness, 0, 3)
+            create_cube(p, east_wall_bounds, wall_color, wall_alpha)
+
+            north_wall_bounds = (-5, 5, 5, 5 + wall_thickness, 0, 3)
+            create_cube(p, north_wall_bounds, wall_color, wall_alpha)
+
+            south_wall_bounds = (-5, 5, -5 - wall_thickness, -5, 0, 3)
+            create_cube(p, south_wall_bounds, wall_color, wall_alpha)
 
     #### Run the simulation ####################################
     action = np.zeros((num_drones,4))
     START = time.time()
+    last_pos = INIT_XYZS[0]
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
         #### Step the simulation ###################################
@@ -208,12 +244,27 @@ def run(waypoints,              # waypoints to follow, shape (N, 3)
                                                                     )
             #print("j: ", j, "wp_counters[j]: ", wp_counters[j], "target_pos=waypoints[wp_counters[j], :]: ", waypoints[wp_counters[j], :])
 
-        #### Go to the next way point and loop #####################
-        for j in range(num_drones):
+            #### Go to the next way point and loop #####################
             wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-2) else wp_counters[j]
 
-        #### Log the simulation ####################################
-        for j in range(num_drones):
+            #### Plot the trace #######################################
+            cur_pos = obs[j][:3]
+            p.addUserDebugLine(lineFromXYZ=last_pos, lineToXYZ=cur_pos, lineColorRGB=[1, 0, 0], lineWidth=4.0)
+            
+            if scenario.scenario_name == "treasure_hunt":
+                #### remove door when key is reached #####################
+                key_bounds = scenario.objects["door_key"]
+                # check if drone is in the key bounds
+                tolerance = 0.1
+                key_reached = cur_pos[0] > key_bounds[0] - tolerance and cur_pos[0] < key_bounds[1] + tolerance and cur_pos[1] > key_bounds[2] - tolerance and cur_pos[1] < key_bounds[3] + tolerance and cur_pos[2] > key_bounds[4] - tolerance and cur_pos[2] < key_bounds[5] + tolerance
+                if key_reached:
+                    # remove door
+                    p.removeBody(key_id)
+                    p.removeBody(door_id)
+                    
+            last_pos = cur_pos
+
+            #### Log the simulation ####################################
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state=obs[j],
@@ -252,7 +303,6 @@ if __name__ == "__main__":
     parser.add_argument('--obstacles',          default=DEFAULT_OBSTACLES,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
     parser.add_argument('--output_folder',      default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
     ARGS = parser.parse_args()
