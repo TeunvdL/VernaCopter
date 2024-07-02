@@ -7,11 +7,8 @@ This repository presents the code for VernaCopter, a framework for natural langu
 2. [Installation](#installation)
 3. [Usage](#usage)
 4. [Configuration](#configuration)
-5. [Contributing](#contributing)
-6. [Authors and Acknowledgments](#authors-and-acknowledgments)
-7. [Contact Information](#contact-information)
-8. [FAQ](#faq)
-9. [Additional Resources](#additional-resources)
+5. [Authors and Acknowledgments](#authors-and-acknowledgments)
+6. [Contact Information](#contact-information)
 
 ## Abstract
 
