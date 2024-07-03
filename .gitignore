@@ -137,9 +137,8 @@ cython_debug/
 *.gif
 *.pyc
 *.pyc
-ChatGPT_key.txt
-iteun_key.txt
-# *.npy
 *.csv
 Archived/
 *.mp4
+*.json
+experiments\Analysis.ipynb
