@@ -21,6 +21,13 @@ class NL_to_STL:
         response = messages[-1]['content']
         spec = self.extract_spec(response)
         return spec
+    
+    def get_waypoints(self, messages):
+        print("Extracting the waypoints...")
+        response = messages[-1]['content']
+        waypoints = self.extract_waypoints(response)
+        print("Waypoints: ", waypoints)
+        return waypoints
 
     def gpt_conversation(self, instructions_file, max_inputs=10, previous_messages=[], processing_feedback=False, status="active", automated_user=False, automated_user_input=""):
         
@@ -57,7 +64,7 @@ class NL_to_STL:
 
                     # check if < or > symbol is present in the response and exit conversation if detected
                     if '<' in response:
-                        print("The specification was generated.")
+                        print("The final response was generated.")
                         break
             else:
                 print(color_text("Automated user: ", 'orange'), automated_user_input)
@@ -68,11 +75,11 @@ class NL_to_STL:
                     print(color_text("Assistant:", 'cyan'), response)
 
                     if '<' in response:
-                            print("The specification was generated.")
+                            print("The final response was generated.")
                             break
                     else:
                         messages.append({"role": "system", "content": "Please provide the specification now."})
-                        print("The specification was not generated correctly. Trying again...")
+                        print("The final response was not generated correctly. Trying again...")
 
                 
         return messages, status
@@ -117,3 +124,15 @@ class NL_to_STL:
             start = end + 1
             spec = spec.replace("\n", " ") # remove returns
         return spec
+    
+    def extract_waypoints(self, response):
+        start = 0
+        while True:
+            start = response.find("<", start)
+            if start == -1:
+                break
+            end = response.find(">", start)
+            waypoints = response[start+1:end]
+            start = end + 1
+            waypoints = waypoints.replace("\n", " ") # remove returns
+        return np.array(eval(waypoints))
