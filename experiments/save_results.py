@@ -1,17 +1,23 @@
 import os
 import json
 from basics.logger import color_text
+import numpy as np
 
-def save_results(pars, messages, task_accomplished):
+def save_results(pars, messages, task_accomplished, waypoints=None):
     print(color_text("Saving the results...", 'yellow'))
     this_directory = os.path.dirname(os.path.abspath(__file__))
 
-    if pars.automated_user:
-        subfolder = 'automatic'
-    elif not pars.automated_user:
-        subfolder = 'conversation'
+    if pars.STL_included:
+        STL_mode = 'STL'
+    else:
+        STL_mode = 'non-STL'
 
-    experiments_directory = this_directory + f'/{subfolder}/' + f'{pars.scenario_name}/'
+    if pars.automated_user:
+        user_mode = 'automatic'
+    elif not pars.automated_user:
+        user_mode = 'conversation'
+
+    experiments_directory = this_directory + f'/{STL_mode}/' + f'/{user_mode}/' + f'{pars.scenario_name}/'
 
     if not os.path.exists(experiments_directory):
         os.makedirs(experiments_directory)
@@ -62,5 +68,11 @@ def save_results(pars, messages, task_accomplished):
 
     with open(metadata_file_path, 'w') as f:
         json.dump(metadata, f)
+
+    #save waypoints with np.save if available
+    if waypoints is not None:
+        waypoints_file_name = f'{experiment_id}_waypoints.npy'
+        waypoints_file_path = os.path.join(experiments_directory, waypoints_file_name)
+        np.save(waypoints_file_path, waypoints)
 
     print(color_text(f"Results saved in {experiments_directory}", 'yellow'))
