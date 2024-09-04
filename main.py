@@ -170,7 +170,8 @@ def main(pars=Default_parameters()):
         previous_messages = messages
 
         if pars.automated_user and (trajectory_accepted or not pars.spec_checker_enabled):
-            all_x = np.hstack((all_x, x[:,1:]))
+            if x is not None:
+                all_x = np.hstack((all_x, x[:,1:]))
             break
         
     # Visualize the full trajectory
@@ -187,7 +188,7 @@ def main(pars=Default_parameters()):
 
     print(color_text("The program is completed.", 'yellow'))
 
-    return messages, task_accomplished
+    return messages, task_accomplished, all_x
 
 if __name__ == "__main__":
     pars = Default_parameters()
