@@ -142,3 +142,4 @@ Archived/
 *.mp4
 *.json
 experiments\Analysis.ipynb
+*.npy
