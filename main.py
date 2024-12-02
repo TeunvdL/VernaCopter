@@ -4,7 +4,7 @@ from STL.STL_to_path import *
 from STL.spec_check import *
 from basics.logger import color_text
 from basics.scenarios import *
-from basics.setup import Default_parameters
+from basics.config import Default_parameters
 from visuals.simulation.simulation import simulate
 from visuals.visualization import *
 
