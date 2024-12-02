@@ -5,7 +5,7 @@ from STL.spec_check import *
 from basics.logger import color_text
 from basics.scenarios import *
 from basics.config import Default_parameters
-from visuals.simulation.simulation import simulate
+from visuals.simulation import simulate
 from visuals.visualization import *
 
 def main(pars=Default_parameters()): 
