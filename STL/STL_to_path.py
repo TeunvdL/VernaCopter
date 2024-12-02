@@ -70,25 +70,6 @@ class drone_dynamics:
         return sys
     
 
-class DummySystem:
-    def __init__(self, real_system):
-
-        self.dt = real_system.dt            # time step
-        self.max_acc = real_system.max_acc  # absolute maximum acceleration
-
-        self.A = np.zeros_like(real_system.A)
-        self.B = np.zeros_like(real_system.B)
-        self.B[0, 0], self.B[1, 1], self.B[2, 2] = 1, 1, 1
-        self.C = np.eye(real_system.C.shape[0])
-        self.D = np.zeros_like(real_system.D)
-
-        self.A_tilde = np.eye(real_system.A.shape[0])+self.A*self.dt
-        self.B_tilde = self.B*self.dt
-
-    def getSystem(self):
-        return LinearSystem(self.A_tilde, self.B_tilde, self.C, self.D)
-    
-
 class STLSolver:
     def __init__(self, spec, objects, x0 = np.zeros(6,), T=10):
         self.objects = objects
@@ -105,11 +86,6 @@ class STLSolver:
         N = int(self.T/self.dt)
 
         dynamics = drone_dynamics(dt=self.dt, max_acc=max_acc)
-
-        if not include_dynamics:
-            self.max_acc = 100
-            self.max_speed = 100
-            dynamics = DummySystem(dynamics)
             
         sys = dynamics.getSystem()      
 

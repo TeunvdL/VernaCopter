@@ -1,12 +1,14 @@
-from LLM.GPT import GPT
-from LLM.NL_to_STL import *
-from STL.STL_to_path import *
-from STL.spec_check import *
+from LLM.NL_to_STL import NL_to_STL
+from STL.STL_to_path import STLSolver, STL_formulas
+from STL.spec_check import Spec_checker
 from basics.logger import color_text
-from basics.scenarios import *
+from basics.scenarios import Scenarios
 from basics.config import Default_parameters
 from visuals.simulation import simulate
-from visuals.visualization import *
+from visuals.visualization import Visualizer
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 def main(pars=Default_parameters()): 
     # Set up scenario
@@ -54,59 +56,6 @@ def main(pars=Default_parameters()):
         print("Extracted specification: ", spec)
 
         solver = STLSolver(spec, scenario.objects, x0, T) # Initialize the solver
-        
-        # Check if the specification is feasible without dynamics
-        if pars.dynamicless_check_enabled and not spec_accepted:
-            print(color_text("Checking the specification without dynamics...", 'yellow'))
-            try:
-                no_dynamics_x, no_dynamics_u = solver.generate_trajectory(pars.dt, pars.max_acc, pars.max_speed, verbose=pars.solver_verbose, include_dynamics=False)
-                spec_checker = Spec_checker(scenario.objects, no_dynamics_x, N, pars.dt)
-                inside_objects_array = spec_checker.get_inside_objects_array()
-                visualizer = Visualizer(no_dynamics_x, scenario, animate=False)
-                fig, ax = visualizer.visualize_trajectory()
-                plt.pause(1)
-                fig, ax = spec_checker.visualize_spec(inside_objects_array)
-                plt.pause(1)
-
-                if pars.spec_checker_enabled and spec_checker_iteration < pars.spec_check_limit:
-                    spec_check_response = spec_checker.GPT_spec_check(scenario.objects, inside_objects_array, messages)
-                    spec_accepted = spec_checker.spec_accepted_check(spec_check_response)
-                    if not spec_accepted:
-                        print(color_text("The specification is rejected by the checker.", 'yellow'))
-                        spec_checker_message = {"role": "system", "content": f"Specification checker: {spec_check_response}"}
-                        messages.append(spec_checker_message)
-                        processing_feedback = True
-                    spec_checker_iteration += 1
-
-                elif spec_checker_iteration > pars.spec_check_limit:
-                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of spec check iterations.")
-                    break
-
-                if pars.manual_spec_check_enabled:
-                    while True:
-                        response = input("Accept the specification? (y/n): ")
-                        if response.lower() == 'y':
-                            print(color_text("The specification is accepted.", 'yellow'))
-                            spec_accepted = True
-                            processing_feedback = False
-                            break
-                        elif response.lower() == 'n':
-                            print(color_text("The specification is rejected.", 'yellow'))
-                            spec_accepted = False
-                            break
-                        else:
-                            print("Invalid input. Please enter 'y' or 'n'.")
-
-            except:
-                print(color_text("The specification is infeasible.", 'yellow'))
-                if pars.syntax_checker_enabled and syntax_checker_iteration <= pars.syntax_check_limit:
-                    print(color_text("Checking the syntax of the specification...", 'yellow'))
-                    syntax_checked_spec = translator.gpt_syntax_checker(spec)
-                    syntax_checker_iteration += 1
-
-                elif syntax_checker_iteration > pars.syntax_check_limit:
-                    print(color_text("The program is terminated.", 'yellow'), "Exceeded the maximum number of syntax check iterations.")
-                    break
 
         if not pars.dynamicless_check_enabled or spec_accepted:
             print(color_text("Generating the trajectory...", 'yellow'))
