@@ -1,0 +1,7 @@
+numpy>=1.26.4
+matplotlib>=3.8.4
+openai>=1.28.1
+pybullet>=3.2.6
+-e git+https://github.com/utiasDSL/gym-pybullet-drones.git@paper#egg=gym-pybullet-drones
+Pillow>=10.3.0
+gurobipy>=11.0.1
