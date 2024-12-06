@@ -19,8 +19,9 @@ The ability to control robots was traditionally chiefly attributed to experts. H
 ### Prerequisites
 
 Before you begin, ensure you have met the following requirements:
-- You have installed Python 3.7 or higher.
+- You have installed Python 3.10 or higher.
 - You have an OpenAI API key. If you don't have one, you can sign up and obtain it from [OpenAI](https://beta.openai.com/signup/).
+- You have [Gurobi](https://support.gurobi.com/hc/en-us/articles/14799677517585-Getting-Started-with-Gurobi-Optimizer) set up. Note that Gurobi is free for academic use.
 
 ### Clone the Repository
 
@@ -28,9 +29,17 @@ Clone the repository to your local machine using the following command:
 
 git clone https://github.com/TeunvdL/ChatGPT_Drone_Control.git
 
-## Usage
+### Create a virtual environment
 
-Examples and instructions on how to use the project.
+conda create -n <env_name> python=3.10 -y
+
+conda activate <env_name>
+
+### Install the requirements
+
+pip install requirements.txt
+
+## Usage
 
 python -m examples.default_example
 
