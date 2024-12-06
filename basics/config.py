@@ -7,7 +7,7 @@ class Default_parameters:
         self.max_speed = 0.5                         # maximum speed in m/s 
         self.dt = 0.7                                # time step in seconds
         self.scenario_name = scenario_name           # scenario: "reach_avoid" or "treasure_hunt"
-        self.GPT_model = "gpt-3.5-turbo"             # GPT version: "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", etc.
+        self.GPT_model = "gpt-4o"                    # GPT version: "gpt-3.5-turbo", "gpt-4o", etc.
 
         # System flags
         self.syntax_checker_enabled = False          # Enable syntax check for the trajectory
