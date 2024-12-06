@@ -32,6 +32,8 @@ git clone https://github.com/TeunvdL/ChatGPT_Drone_Control.git
 
 Examples and instructions on how to use the project.
 
+python -m examples.default_example
+
 ## Configuration
 
 Details about configuration options.
